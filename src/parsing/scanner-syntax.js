@@ -158,7 +158,7 @@ class SyntaxScannerExpression extends SyntaxScannerBaseConstructor {
                 this.exceptDefaultTracewayException(token, 'Call instruction cannot have more than one argument');
             }
 
-            if (nodes[0].type != TypeOfAtomicExpression.CALL) {
+            if ([nodes[0].type == TypeOfAtomicExpression.CALL, nodes[0].type == TypeOfAtomicExpression.IDENTIFER].every(_ => _ == false)) {
                 this.exceptDefaultTracewayException(token, 'Invalid call instruction');
             }
         }

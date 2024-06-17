@@ -30,9 +30,6 @@ class FunctionalMember {
             args = node.name.body.arguments;
         }
 
-        // console.log(args);
-        // console.log(body);
-
         args.map(arg => {
             if (![TypeOfAtomicExpression.PROPERTY, TypeOfAtomicExpression.TYPE_OF_ARGUMENT].includes(arg.type)) {
                 SyntaxScannerExpression.exceptDefaultTracewayException(tokenOfName, 'Arguments must be properties or type of arguments');
@@ -61,11 +58,6 @@ class FunctionalMember {
 
                 const BUFFER_TYPE_OF_ENVIROMENT = Runtime.TYPE_OF_ENVIROMENT;
                 Runtime.TYPE_OF_ENVIROMENT = Runtime.TYPE_OF_ENVIROMENTS.LOCAL;
-                
-                // const Executor = require('../executor/executor.js');
-                // new Executor(body);
-
-                // console.log(body);
 
                 const IntermediateRepresentationCompiler = require('../executor/executor.js');
                 new IntermediateRepresentationCompiler(body);
@@ -78,8 +70,7 @@ class FunctionalMember {
         }
     }
 
-    static implementationTion(expression) {
-    }
+    static implementationTion(expression) {}
 
     static generalImplementation(expression) {
         const tokenInstruction = expression.body.id;

@@ -1,5 +1,7 @@
 const TypeOfAtomicExpression = require("../../types/expression.type");
+const TypeOfToken = require("../../types/token.type");
 const RuntimeException = require("../exception/runtime.exception");
+const Hardware = require("../hardware/hardware");
 
 class AtomicIntermediateRepresentationCompiler {
     static /*#inline*/ complie(expression) {
@@ -14,6 +16,9 @@ class AtomicIntermediateRepresentationCompiler {
                 return value.lexem == 'true' ? true : false;
             }
 
+        } else if (expression?.type == TypeOfToken.REGISTER) {
+            const hardware = new Hardware();
+            return hardware.get_register_by_name(expression.lexem);
         } else {
             throw RuntimeException.exceptMessage('Unsupported literal type');
         }

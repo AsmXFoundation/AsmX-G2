@@ -4,6 +4,8 @@ const TypeOfInstructionExpression = require("../../types/instruction.type");
 const RuntimeException = require("../exception/runtime.exception");
 const AtomicIntermediateRepresentationCompiler = require("../executor/executor-atomic");
 const Hardware = require("../hardware/hardware");
+const BuiltinHardwareFunctions = require("../hardware/hardware-functions");
+const Runtime = require("../runtime");
 
 class SystemMember {
     static implementationSystem(expression) {
@@ -18,10 +20,45 @@ class SystemMember {
             RuntimeException.exceptDefaultTracewayException(expression.body.id, 'takes only number');
         }
 
-        const value_ptr = hardware.stack_pop();
-        const bytes = hardware.memory_dump(value_ptr);
+        if (valueOfArgument == 4) {
+            hardware.ostream_stdout();
+        } else {
+            RuntimeException.exceptDefaultTracewayException(expression.body.id, 'Undefined system call');
+        }
+    }
 
-        console.log(bytes.map(b => String.fromCharCode(b)).join(''));
+    static implementationCall(expression) {
+        const BUFFER_TYPE_OF_ENVIROMENT = Runtime.TYPE_OF_ENVIROMENT;
+        Runtime.TYPE_OF_ENVIROMENT = Runtime.TYPE_OF_ENVIROMENTS.LOCAL;
+
+        const caller = expression.body.caller;
+        let tokenOfName, name;
+        let args = [];
+        
+        if (caller.type == TypeOfAtomicExpression.IDENTIFER) {
+            tokenOfName = caller.body.identifer;
+            name = tokenOfName.lexem;
+        } else if (caller.type == TypeOfAtomicExpression.CALL) {
+            tokenOfName = caller.body.caller;
+            args = caller.body.arguments;
+
+            if (tokenOfName.type == TypeOfAtomicExpression.IDENTIFER) {
+                name = tokenOfName.body.identifer.lexem;
+            } else if (tokenOfName.type == TypeOfAtomicExpression.MEMBER) {
+                name = tokenOfName;
+                tokenOfName = tokenOfName.body.firstToken;
+            }
+        }
+
+        const functions = Reflect.ownKeys(BuiltinHardwareFunctions).filter(func => func.endsWith('__expr__'));
+        
+        if (functions.includes(`__${name}__expr__`)) {
+            BuiltinHardwareFunctions[`__${name}__expr__`](args, caller.body.parentheses);
+        } else {
+            RuntimeException.exceptDefaultTracewayException(caller.body.parentheses[0], 'Undefined function');
+        }
+
+        Runtime.TYPE_OF_ENVIROMENT = BUFFER_TYPE_OF_ENVIROMENT;
     }
 
     static generalImplementation(expression) {
@@ -29,8 +66,10 @@ class SystemMember {
         
         if (TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction) == 'system') {
             this.implementationSystem(expression);
+        } else if (TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction) == 'call') {
+            this.implementationCall(expression);
         } else {
-            SyntaxScannerExpression.exceptDefaultTracewayException(tokenInstruction, 'Expected "system" keyword');
+            SyntaxScannerExpression.exceptDefaultTracewayException(tokenInstruction, 'Expected "system" or "call" keyword');
         }
     }
 }
