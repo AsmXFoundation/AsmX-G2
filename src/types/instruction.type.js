@@ -1,0 +1,53 @@
+const CustomSwitch = require('../utils/control-flow/custom-switch');
+
+class TypeOfInstructionExpression {
+    static conv(type) {
+        return `${type}Expression`;
+    }
+
+    static has(original, ...instructions) {
+        return instructions.map(type => `@${type}`).includes(original);
+    }
+
+    static existNameOfInstruction(type, ...typeOfExpressions) {
+        return typeOfExpressions.includes(type);
+    }
+
+    static extractNameOfInstruction(token) {
+        return token.lexem.replace('@', '');
+    }
+
+    static INSTRUCTION =                    this.conv('Instruction');
+    static MODULE =                         this.conv('Module');
+    static MATHEMATICAL =                   this.conv('Mathematical');
+    static STACK =                          this.conv('Stack');
+    static SYSTEM =                         this.conv('System');
+    static RETURN =                         this.conv('Return');
+    static DECLARATION =                    this.conv('Declaration');
+    static VARIABLE =                       this.conv('Variable');
+    static OBJECT_ORIENTED_PROGRAMMING =    this.conv('ObjectOrientedProgramming');
+    static OBJECT =                         this.conv('Object');
+    static FIELD =                          this.conv('Field');
+    static DATA_STRUCTURE =                 this.conv('DataStructure');
+    static USER =                           this.conv('User');
+
+    static classification(instruction) {
+        return CustomSwitch.switch(this.USER, {
+            [this.has(instruction.lexem, 'add', 'sub', 'mul', 'div')]:                      this.MATHEMATICAL,
+            
+            [this.has(instruction.lexem, 'push', 'pop')]:                                   this.STACK,
+            [this.has(instruction.lexem, 'export', 'import')]:                              this.MODULE,
+            [this.has(instruction.lexem, 'call', 'system')]:                                this.SYSTEM,
+            [this.has(instruction.lexem, 'return', 'ret')]:                                 this.RETURN,
+            [this.has(instruction.lexem, 'set', 'const')]:                                  this.VARIABLE,
+            [this.has(instruction.lexem, 'function', 'tion')]:                              this.DECLARATION,
+
+            [this.has(instruction.lexem, 'class', 'method', 'constructor', 'destructor')]:  this.OBJECT_ORIENTED_PROGRAMMING,
+            [this.has(instruction.lexem, 'property', 'bind')]:                              this.OBJECT,
+            [this.has(instruction.lexem, 'field', 'public', 'private')]:                    this.FIELD,
+            [this.has(instruction.lexem, 'enum', 'struct', 'collection')]:                  this.DATA_STRUCTURE
+        });
+    }
+}
+
+module.exports = TypeOfInstructionExpression;
