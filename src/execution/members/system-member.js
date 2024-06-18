@@ -2,7 +2,6 @@ const SyntaxScannerExpression = require("../../parsing/scanner-syntax");
 const TypeOfAtomicExpression = require("../../types/expression.type");
 const TypeOfInstructionExpression = require("../../types/instruction.type");
 const RuntimeException = require("../exception/runtime.exception");
-const AtomicIntermediateRepresentationCompiler = require("../executor/executor-atomic");
 const Hardware = require("../hardware/hardware");
 const BuiltinHardwareFunctions = require("../hardware/hardware-functions");
 const Runtime = require("../runtime");
@@ -13,6 +12,7 @@ class SystemMember {
             RuntimeException.exceptDefaultTracewayException(expression.body.id, 'takes only one argument');
         }
 
+        const AtomicIntermediateRepresentationCompiler = require("../executor/executor-atomic.js");
         const valueOfArgument = AtomicIntermediateRepresentationCompiler.complie(expression.body.ast[0]);
         const hardware = new Hardware();
         
@@ -32,12 +32,18 @@ class SystemMember {
         Runtime.TYPE_OF_ENVIROMENT = Runtime.TYPE_OF_ENVIROMENTS.LOCAL;
 
         const caller = expression.body.caller;
-        let tokenOfName, name;
+        let tokenOfName, name, parentheses;
         let args = [];
-        
+
         if (caller.type == TypeOfAtomicExpression.IDENTIFER) {
             tokenOfName = caller.body.identifer;
             name = tokenOfName.lexem;
+            
+            if (expression.body.hasOwnProperty('arguments')) {
+                args = expression.body.arguments;
+            }
+
+            parentheses = expression.body.parentheses;
         } else if (caller.type == TypeOfAtomicExpression.CALL) {
             tokenOfName = caller.body.caller;
             args = caller.body.arguments;
@@ -48,17 +54,21 @@ class SystemMember {
                 name = tokenOfName;
                 tokenOfName = tokenOfName.body.firstToken;
             }
+
+            parentheses = caller.body.parentheses;
         }
 
         const functions = Reflect.ownKeys(BuiltinHardwareFunctions).filter(func => func.endsWith('__expr__'));
+        let return_;
         
         if (functions.includes(`__${name}__expr__`)) {
-            BuiltinHardwareFunctions[`__${name}__expr__`](args, caller.body.parentheses);
+            return_ = BuiltinHardwareFunctions[`__${name}__expr__`](args, parentheses);
         } else {
             RuntimeException.exceptDefaultTracewayException(caller.body.parentheses[0], 'Undefined function');
         }
 
         Runtime.TYPE_OF_ENVIROMENT = BUFFER_TYPE_OF_ENVIROMENT;
+        return return_;
     }
 
     static generalImplementation(expression) {

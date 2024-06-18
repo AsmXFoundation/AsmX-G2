@@ -302,6 +302,11 @@ class RecursiveDescentParser {
                     } else {
                         if (this.isOpenPair(this.peek())) {
                             bufferTerms.push(...this.walkToClosePair(this.peek()));
+
+                            if (!this.isNext()) {
+                                possibleTerms.push(bufferTerms);
+                                break;
+                            }
                         } else {
                             bufferTerms.push(this.peek());
                             this.index++;
