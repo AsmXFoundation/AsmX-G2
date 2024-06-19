@@ -1,6 +1,6 @@
 *.asmx
 *.asmx linguist-language=asm
-*.js linguist-language=C
+*.js linguist-language=c
 *.asmx linguist-detectable=true
 *.js linguist-detectable=false
 *.ts linguist-detectable=false
