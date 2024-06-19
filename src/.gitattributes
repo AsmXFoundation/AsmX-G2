@@ -1,5 +1,5 @@
 *.asmx
-*.asmx linguist-language=asm
+*.asmx linguist-language=asmx
 *.js linguist-language=cc
 *.asmx linguist-detectable=true
 *.js linguist-detectable=false
