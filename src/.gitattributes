@@ -1,7 +1,8 @@
 *.asmx
 *.asmx linguist-language=asm
-*.js linguist-language=h
+*.js linguist-language=c
 *.asmx linguist-detectable=true
 *.js linguist-detectable=false
 *.ts linguist-detectable=false
 *.bat linguist-detectable=false
+ 
