@@ -30,7 +30,8 @@ class Hardware {
         this.registers = {
             $ax: new Uint16Array(1),
             $sp: new Uint16Array(1),
-            $eax: new Uint32Array(1)
+            $eax: new Uint32Array(1),
+            $edx: new Uint32Array(1)
         };
 
         this.NULL_TERMINATOR = 0x00;
@@ -75,6 +76,10 @@ class Hardware {
         this.registers.$eax.set([value]);
     }
 
+    set_register_$edx(value) {
+        this.registers.$edx.set([value]);
+    }
+
     get_register_by_name(name) {
         if (name in this.registers) {
             return this.registers[name];
@@ -93,6 +98,79 @@ class Hardware {
 
     #gen_random_uint16() {
         return Math.floor(Math.random() * 65536);
+    }
+
+    #math_micro_operation_add(a, b) {
+        return a + b;
+    }
+
+    #math_micro_operation_sub(a, b) {
+        return a - b;
+    }
+
+    #math_micro_operation_mul(a, b) {
+        return a * b;
+    }
+
+    #math_micro_operation_div(a, b) {
+        return a / b;
+    }
+    
+    math(opcode, args) {
+        if (args.length > 0x06) {
+            HardwareException.except(`Too many arguments`);
+        }
+
+        for (let index = 0; index < args.length; index++) {
+            const num_t = this.#fetch_typeid(args[index]);
+
+            if (typeof num_t == 'number') {
+                continue;
+            }
+
+            if (!Object.values(this.#typeid).includes(num_t)) {
+                HardwareException.except(`Cannot find type ${num_t}`);
+            }
+        }
+
+        let result_raw = 0x00;
+
+        switch (opcode) {
+            case 'add':
+                result_raw = args.reduce(this.#math_micro_operation_add, result_raw);
+                break;
+
+            case 'sub':
+                result_raw = args.reduce(this.#math_micro_operation_sub, result_raw);
+                break;
+
+            case 'mul':
+                result_raw = args.reduce(this.#math_micro_operation_mul, result_raw);
+                break;
+
+            case 'div':
+                result_raw = args.reduce(this.#math_micro_operation_div, result_raw);
+                break;
+
+            default:
+                break;
+        }
+
+        const result_t = this.#fetch_typeid(result_raw);
+        let $eax, $edx;
+
+        if (result_t == this.#typeid.uint64) {
+            $eax = result_raw >> 32;
+            $edx = result_raw & 0x0000_0000_0000_ffff;
+        } else {
+            $eax = result_raw;
+            $edx = 0x0000_0000;
+        }
+
+        this.set_register_$eax($eax);
+        this.set_register_$edx($edx);
+
+        return [$eax, $edx];
     }
 
     ostream_stdout() {
