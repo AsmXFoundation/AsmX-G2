@@ -20,6 +20,8 @@
     @push $ax;
     @system 4;
 
+    @call mem_free($ax);
+
     @call sizeof($eax);
     @push $eax;
     @system 4;

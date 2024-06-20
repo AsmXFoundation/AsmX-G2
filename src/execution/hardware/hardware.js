@@ -1,4 +1,3 @@
-const RuntimeException = require("../exception/runtime.exception");
 const typeid = require("../types/typeid");
 const HardwareException = require("./hardware-exception");
 
@@ -47,7 +46,12 @@ class Hardware {
         uint8: 'uint8', uint16: 'uint16',  uint32: 'uint32', uint64: 'uint64'
     }
 
+    #typeid_movement = {
+        reg: 'reg', mem: 'mem', imm: 'imm'
+    }
+
     types = this.#typeid;
+    types_movement = this.#typeid_movement;
 
     #usedPointersForHeap = [];
     #usedPointersForMemory = [];
@@ -88,6 +92,14 @@ class Hardware {
         HardwareException.except(`Register '${name}' not found`);
     }
 
+    set_register_by_name(name, value) {
+        if (name in this.registers) {
+            this.registers[name].set([value]);
+        } else {
+            HardwareException.except(`Register '${name}' not found`);
+        }
+    }
+
     randomAddress() {
         return Math.floor(Math.random() * 0x1000_0000);
     }
@@ -118,7 +130,7 @@ class Hardware {
     
     math(opcode, args) {
         if (args.length > 0x06) {
-            HardwareException.except(`Too many arguments`);
+            HardwareException.except(`Too many arguments in ${opcode}`);
         }
 
         for (let index = 0; index < args.length; index++) {
@@ -213,7 +225,7 @@ class Hardware {
 
     #stack_micro_operation_pull_address() {
         if (this.stackPhysicalPointer < 0) {
-            RuntimeException.exceptMessage("Stack underflow");
+            HardwareException.except("Stack underflow");
         }
 
         return this.stack.at(this.stackPhysicalPointer - 1);
@@ -288,6 +300,14 @@ class Hardware {
     }
 
     #fetch_typeid(size) {
+        if (size instanceof Uint8Array) {
+            return this.#typeid.uint8;
+        } else if (size instanceof Uint16Array) {
+            return this.#typeid.uint16;
+        } else if (size instanceof Uint32Array) {
+            return this.#typeid.uint32;
+        }
+        
         if (size > 0 && size < 256) {
             return this.#typeid.uint8;
         } else if (size >= 256 && size < 65536) {
@@ -463,6 +483,55 @@ class Hardware {
         }
 
         this.usedHeapSize -= 0x1;
+    }
+
+    mem_free(ptr) {
+        const type_of_ptr = this.#fetch_typeid(ptr);
+        const ptr_uint16 = ptr[0];
+
+        if (type_of_ptr != this.#typeid.uint16) {
+            HardwareException.except(
+                `first argument of 'void mem_free(${this.#typeid.uint16} ptr)' should be '${this.#typeid.uint16}'`
+            );
+        }
+
+        const index_t = this.#usedPointersForMemory.indexOf(ptr_uint16);
+
+        if (index_t == -1) {
+            HardwareException.except(`Pointer '${ptr_uint16}' is not in memory`);
+        }
+
+        while (this.#usedPointersForMemory[index_t] != 0x0) {
+            this.#usedPointersForMemory.splice(index_t, 1);
+        }
+    }
+
+    mov(destination, source) {
+        if (destination?.type == this.#typeid_movement.reg) {
+            if (source?.type == this.#typeid_movement.imm) {
+                this.set_register_by_name(destination.name, source.value);
+            } else if (source?.type == this.#typeid_movement.reg) {
+                this.set_register_by_name(destination.name, this.get_register_by_name(source.name));
+            } else if (source?.type == this.#typeid_movement.mem) {
+                let type_of_ptr, ptr_uint16;
+
+                if (source.ptr_t  == this.#typeid_movement.imm) {
+                    type_of_ptr = this.#fetch_typeid(parseInt(source.ptr));
+                    ptr_uint16 = parseInt(source.ptr);
+                } else if (source.ptr_t  == this.#typeid_movement.reg) {
+                    type_of_ptr = this.#fetch_typeid(this.get_register_by_name(source.ptr));
+                    ptr_uint16 = this.get_register_by_name(source.ptr);
+                }
+
+                if (type_of_ptr != this.#typeid.uint16) {
+                    HardwareException.except(
+                        `second argument of 'mov $reg, [${this.#typeid.uint16} ptr]' should be '${this.#typeid.uint16}'`
+                    );
+                }
+
+                this.set_register_by_name(destination.name, this.memory_dump(ptr_uint16));
+            }
+        }
     }
 }
 

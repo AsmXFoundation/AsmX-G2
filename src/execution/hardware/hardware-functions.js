@@ -38,6 +38,22 @@ class BuiltinHardwareFunctions {
         hardware.free(valueOfArgument);
     }
 
+    static __mem_free__expr__(args, parentheses) {
+        if (args.length != 1 | args.length > 1) {
+            SyntaxScannerExpression.exceptDefaultTracewayException(parentheses[0], 'Arguments must be one');
+        }
+
+        const AtomicIntermediateRepresentationCompiler = require("../executor/executor-atomic.js");
+        let valueOfArgument = AtomicIntermediateRepresentationCompiler.complie(args[0]);
+        
+        if ([typeof valueOfArgument != 'number', valueOfArgument instanceof Uint16Array].every(_ => _ == false)) {
+            SyntaxScannerExpression.exceptDefaultTracewayException(parentheses[0], 'Arguments must be number');
+        }
+
+        const hardware = new Hardware();
+        hardware.mem_free(valueOfArgument);
+    }
+
     static __calloc__expr__(args, parentheses) {
         if ([args.length < 2, args.length > 2].some(_ => _ == true)) {
             SyntaxScannerExpression.exceptDefaultTracewayException(parentheses[0], 'takes only two arguments');

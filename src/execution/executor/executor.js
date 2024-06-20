@@ -11,6 +11,7 @@ const ModuleMember = require("../members/module-member.js");
 const StackMember = require("../members/stack-member.js");
 const SystemMember = require("../members/system-member.js");
 const MathematicalMember = require("../members/mathematical-member.js");
+const MovementMember = require("../members/movement-member.js");
 
 
 class IntermediateRepresentationCompiler {
@@ -52,6 +53,10 @@ class IntermediateRepresentationCompiler {
 
                 else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.MATHEMATICAL)) {
                     MathematicalMember.generalImplementation(expression);
+                }
+
+                else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.MOVEMENT)) {
+                    MovementMember.generalImplementation(expression);
                 }
                 
             } else {
