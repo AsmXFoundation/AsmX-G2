@@ -36,7 +36,7 @@ class TypeOfInstructionExpression {
         return CustomSwitch.switch(this.USER, {
             [this.has(instruction.lexem, 'add', 'sub', 'mul', 'div')]:                      this.MATHEMATICAL,
 
-            [this.has(instruction.lexem, 'mov')]:                                           this.MOVEMENT,
+            [this.has(instruction.lexem, 'mov', 'movzx', 'movsx')]:                         this.MOVEMENT,
             
             [this.has(instruction.lexem, 'push', 'pop')]:                                   this.STACK,
             [this.has(instruction.lexem, 'export', 'import')]:                              this.MODULE,

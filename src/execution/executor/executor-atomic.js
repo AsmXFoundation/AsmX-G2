@@ -15,6 +15,8 @@ class AtomicIntermediateRepresentationCompiler {
 
             if (Object.values(hardware.types).includes(expression.body.identifer.lexem)) {
                 return new typeid(expression.body.identifer.lexem);
+            } else {
+                RuntimeException.except(expression.body[Reflect.ownKeys(expression.body)[0]], 'Unsupported literal type');
             }
 
         } else if (expression?.type == TypeOfAtomicExpression.LITERAL) {

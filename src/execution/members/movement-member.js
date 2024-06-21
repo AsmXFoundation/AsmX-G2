@@ -25,6 +25,46 @@ class MovementMember {
         hardware.mov(...args_raw);
     }
 
+    static __movzx__expr__(expression) {
+        if (expression.body.ast[0].type != TypeOfAtomicExpression.ARGUMENTS) {
+            SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected arguments');
+        }
+
+        const args = expression.body.ast[0].body.values;
+
+        if (args.length > 2) {
+            SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected 2 arguments');
+        }
+
+        const hardware = new Hardware();
+
+        const args_raw = args.map(arg => {
+            return HardwareArgument.fetch_raw(arg, HardwareArgument.fetch_typeid(arg));
+        });
+
+        hardware.movzx(...args_raw);
+    }
+
+    static __movsx__expr__(expression) {
+        if (expression.body.ast[0].type != TypeOfAtomicExpression.ARGUMENTS) {
+            SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected arguments');
+        }
+
+        const args = expression.body.ast[0].body.values;
+
+        if (args.length > 2) {
+            SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected 2 arguments');
+        }
+
+        const hardware = new Hardware();
+
+        const args_raw = args.map(arg => {
+            return HardwareArgument.fetch_raw(arg, HardwareArgument.fetch_typeid(arg));
+        });
+
+        hardware.movsx(...args_raw);
+    }
+
     static generalImplementation(expression) {
         const tokenInstruction = expression.body.id;
         const mov_t = TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction);

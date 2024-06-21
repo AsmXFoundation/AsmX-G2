@@ -33,19 +33,8 @@ class HardwareArgument {
 
             return { type, value };
         } else if (type == hardware.types_movement.mem) {
-            const overloads = [
-                `first argument of 'mov [${hardware.types.uint16}], $reg' should be '${hardware.types.uint16}'`,
-                `first argument of 'mov [${hardware.types.uint16}], imm' should be '${hardware.types.uint16}'`,
-                `first argument of 'mov [${hardware.types.uint16}], [${hardware.types.uint16}]' should be '${hardware.types.uint16}'`,
-                `second argument of 'mov [${hardware.types.uint16}], [${hardware.types.uint16}]' should be '${hardware.types.uint16}'`,
-                `second argument of 'mov $reg, [${hardware.types.uint16}]' should be '${hardware.types.uint16}'`
-            ];
-            
             if (token.body.values.length > 1) {
-                HardwareException.except(
-                    `Unsupported memory argument`,
-                    ...overloads
-                );
+                HardwareException.except(`Unsupported memory argument`);
             }
 
             const type = HardwareArgument.fetch_typeid(token.body.values);

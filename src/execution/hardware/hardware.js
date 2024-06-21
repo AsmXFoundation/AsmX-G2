@@ -30,6 +30,8 @@ class Hardware {
             $ax: new Uint16Array(1),
             $sp: new Uint16Array(1),
             $eax: new Uint32Array(1),
+            $ebx: new Uint32Array(1),
+            $ecx: new Uint32Array(1),
             $edx: new Uint32Array(1)
         };
 
@@ -349,6 +351,32 @@ class Hardware {
         }
     }
 
+    #fetch_greater_typeid_by_name(type_a, type_b) {
+        return this.#fetch_sizeof_by_name(type_a) > this.#fetch_sizeof_by_name(type_b);
+    }
+
+    #fetch_less_typeid_by_name(type_a, type_b) {
+        return this.#fetch_sizeof_by_name(type_a) < this.#fetch_sizeof_by_name(type_b);
+    }
+
+    #fetch_maxsize_typeid_by_name(name) {
+        if (name == this.#typeid.uint8) {
+            return (2 ** 8) - 1;
+        } else if (name == this.#typeid.uint16) {
+            return (2 ** 16) - 1;
+        } else if (name == this.#typeid.uint32) {
+            return (2 ** 32) - 1;
+        } else if (name == this.#typeid.uint64) {
+            return (2 ** 64) - 1;
+        } else {
+            return 0x00;
+        }
+    }
+
+    #tostring16(num_t) {
+        return num_t.toString(16);
+    }
+
     sizeof(name_t) {
         let size_t = 0x00;
 
@@ -531,6 +559,82 @@ class Hardware {
 
                 this.set_register_by_name(destination.name, this.memory_dump(ptr_uint16));
             }
+        } else {
+            HardwareException.except('first argument of mov should be $reg');
+        }
+    }
+
+    #movzx_micro_operation_cast(destination_t, source_val) {
+        const destination_maxsize = this.#tostring16(this.#fetch_maxsize_typeid_by_name(destination_t));
+        return parseInt('0x' + source_val.toString(16).padStart(destination_maxsize.length, 0));
+    }
+
+    #movsx_micro_operation_cast(destination_t, source_val) {
+        const destination_maxsize = this.#tostring16(this.#fetch_maxsize_typeid_by_name(destination_t));
+        return parseInt('0x' + source_val.toString(16).padStart(destination_maxsize.length, 'f'));
+    }
+
+    movzx(destination, source) {
+        if (destination?.type == this.#typeid_movement.reg) {
+            let source_val;
+
+            if (source?.type == this.#typeid_movement.imm) {
+                source_val = parseInt(source.value);
+            } else if (source?.type == this.#typeid_movement.reg) {
+                source_val = this.get_register_by_name(source.name);
+            } else if (source?.type == this.#typeid_movement.mem) {
+                HardwareException.except('this is not implemented yet');
+            }
+                
+            const destination_t = this.#fetch_typeid(this.get_register_by_name(destination.name));
+            const source_t = this.#fetch_typeid(source_val);
+
+            if (destination_t == source_t) {
+                HardwareException.except(
+                    `Unexpected error: two arguments of 'movzx $reg, $reg' should be different types`
+                );
+            }
+
+            if (this.#fetch_greater_typeid_by_name(destination_t, source_t)) {
+                this.set_register_by_name(destination.name, this.#movzx_micro_operation_cast(destination_t, source_val));
+            } else {
+                HardwareException.except(`Source type is larger than destination type in movzx instruction`);
+            }
+
+        } else {
+            HardwareException.except('first argument of movzx should be $reg');
+        }
+    }
+
+    movsx(destination, source) {
+        if (destination?.type == this.#typeid_movement.reg) {
+            let source_val;
+
+            if (source?.type == this.#typeid_movement.imm) {
+                source_val = parseInt(source.value);
+            } else if (source?.type == this.#typeid_movement.reg) {
+                source_val = this.get_register_by_name(source.name);
+            } else if (source?.type == this.#typeid_movement.mem) {
+                HardwareException.except('this is not implemented yet');
+            }
+                
+            const destination_t = this.#fetch_typeid(this.get_register_by_name(destination.name));
+            const source_t = this.#fetch_typeid(source_val);
+
+            if (destination_t == source_t) {
+                HardwareException.except(
+                    `Unexpected error: two arguments of 'movsx $reg, $reg' should be different types`
+                );
+            }
+
+            if (this.#fetch_greater_typeid_by_name(destination_t, source_t)) {
+                this.set_register_by_name(destination.name, this.#movsx_micro_operation_cast(destination_t, source_val));
+            } else {
+                HardwareException.except(`Source type is larger than destination type in movsx instruction`);
+            }
+
+        } else {
+            HardwareException.except('first argument of movsx should be $reg');
         }
     }
 }
