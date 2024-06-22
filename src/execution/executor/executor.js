@@ -12,6 +12,9 @@ const StackMember = require("../members/stack-member.js");
 const SystemMember = require("../members/system-member.js");
 const MathematicalMember = require("../members/mathematical-member.js");
 const MovementMember = require("../members/movement-member.js");
+const Branchmember = require("../members/branch-member.js");
+const JumpMember = require("../members/jump-member.js");
+const ConditionInstructionMember = require("../members/condition-instruction-member.js");
 
 
 class IntermediateRepresentationCompiler {
@@ -27,6 +30,7 @@ class IntermediateRepresentationCompiler {
                         TypeOfInstructionExpression.DECLARATION,
                         TypeOfInstructionExpression.OBJECT_ORIENTED_PROGRAMMING,
                         TypeOfInstructionExpression.DATA_STRUCTURE,
+                        TypeOfInstructionExpression.BRANCH_BLOCK
                     ];
 
                     if (!TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, ...allowedTypeOfInstructions)) {
@@ -57,6 +61,18 @@ class IntermediateRepresentationCompiler {
 
                 else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.MOVEMENT)) {
                     MovementMember.generalImplementation(expression);
+                }
+
+                else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.JUMP)) {
+                    JumpMember.generalImplementation(expression);
+                }
+
+                else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.BRANCH_BLOCK, TypeOfInstructionExpression.BRANCH_INSTRUCTION)) {
+                    Branchmember.generalImplementation(expression);
+                }
+
+                else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.CONDITION_INSTRUCTION)) {
+                    ConditionInstructionMember.generalImplementation(expression);
                 }
                 
             } else {

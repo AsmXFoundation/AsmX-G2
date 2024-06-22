@@ -116,6 +116,18 @@ class SyntaxScannerExpression extends SyntaxScannerBaseConstructor {
         }
     }
 
+    static scanBranchBlockInstruction(token, ast, possibleTerms) {
+        this.checkEmptyInstruction(token, possibleTerms);
+
+        if (ast.length > 2) {
+            this.exceptDefaultTracewayException(token, 'There can be only one body');
+        }
+
+        if (ast[0].type != TypeOfAtomicExpression.OBJECT) {
+            this.exceptDefaultTracewayException(possibleTerms[0], 'Expected name before parenthesis');
+        }
+    }
+
     static scanVariableInstruction(token, nodes, possibleTerms) {
         this.checkEmptyInstruction(token, possibleTerms);
 

@@ -20,7 +20,11 @@ class SystemMember {
             RuntimeException.exceptDefaultTracewayException(expression.body.id, 'takes only number');
         }
 
-        if (valueOfArgument == 4) {
+        if (valueOfArgument == 1) {
+            process.exit();
+        } else if (valueOfArgument == 3) {
+            hardware.ostream_stdout(hardware.ostream_stdout_signals.stream);
+        } else if (valueOfArgument == 4) {
             hardware.ostream_stdout();
         } else {
             RuntimeException.exceptDefaultTracewayException(expression.body.id, 'Undefined system call');

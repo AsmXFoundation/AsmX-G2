@@ -23,6 +23,10 @@ class TypeOfInstructionExpression {
     static STACK =                          this.conv('Stack');
     static SYSTEM =                         this.conv('System');
     static MOVEMENT =                       this.conv('Movement');
+    static BRANCH_BLOCK =                   this.conv('BranchBlock');
+    static BRANCH_INSTRUCTION =             this.conv('BranchInstruction');
+    static JUMP =                           this.conv('Jump');
+    static CONDITION_INSTRUCTION =          this.conv('ConditionInstruction');
     static RETURN =                         this.conv('Return');
     static DECLARATION =                    this.conv('Declaration');
     static VARIABLE =                       this.conv('Variable');
@@ -34,9 +38,13 @@ class TypeOfInstructionExpression {
 
     static classification(instruction) {
         return CustomSwitch.switch(this.USER, {
-            [this.has(instruction.lexem, 'add', 'sub', 'mul', 'div')]:                      this.MATHEMATICAL,
+            [this.has(instruction.lexem, 'add', 'sub', 'mul', 'div', 'inc', 'dec')]:        this.MATHEMATICAL,
 
             [this.has(instruction.lexem, 'mov', 'movzx', 'movsx')]:                         this.MOVEMENT,
+            [this.has(instruction.lexem, 'label')]:                                         this.BRANCH_BLOCK,
+            [this.has(instruction.lexem, 'goto')]:                                          this.BRANCH_INSTRUCTION,
+            [this.has(instruction.lexem, 'jnz', 'jle', 'jmp')]:                             this.JUMP,
+            [this.has(instruction.lexem, 'cmp')]:                                           this.CONDITION_INSTRUCTION,
             
             [this.has(instruction.lexem, 'push', 'pop')]:                                   this.STACK,
             [this.has(instruction.lexem, 'export', 'import')]:                              this.MODULE,

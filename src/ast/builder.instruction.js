@@ -57,6 +57,10 @@ class BuilderExpression {
         }
     }
 
+    static buildBranchBlockInstruction(nodes, attributes = []) {
+        return { name: attributes[attributes.length - 1], body: nodes[0], attributes: attributes.slice(0, -1) };
+    }
+
     static getAttributes(ast) {
         const attributes = [];
 
@@ -74,9 +78,7 @@ class BuilderExpression {
             }
         }
 
-        if (attributes.length > 0) {
-            return attributes;
-        }
+        return attributes;
     }
 }
 

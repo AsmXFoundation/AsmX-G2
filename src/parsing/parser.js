@@ -51,11 +51,16 @@ class RecursiveDescentParser {
 
                 const ast = [];
 
-                if (TypeOfInstructionExpression.classification(token) == TypeOfInstructionExpression.DATA_STRUCTURE) {
+                if (
+                    [
+                        TypeOfInstructionExpression.DATA_STRUCTURE, TypeOfInstructionExpression.BRANCH_BLOCK
+                    ]
+                    .includes(TypeOfInstructionExpression.classification(token))
+                ) {
                     let leftPossibleTerms = [];
 
                     leftPossibleTerms = this.localCollectTokens(possibleTerms, peek => 
-                        ![TypeOfToken.OPEN_PAREN, TypeOfToken.OPEN_CURLY_BRACKET].some(type => type == peek.type)
+                        ![TypeOfToken.OPEN_CURLY_BRACKET].some(type => type == peek.type)
                     );
 
                     possibleTerms = possibleTerms.slice(leftPossibleTerms.length);
@@ -98,14 +103,8 @@ class RecursiveDescentParser {
                         SyntaxScannerItem.mode = SyntaxScannerItem.MODES.item;
                     }
 
-                    // if (possibleTerms.length == 2) {
-                        ast.push(...this.getNodes(possibleTerms));
-                        this.index += 2;
-                    // } else {
-                    //     ast.push(...this.getNodes(possibleTerms));
-                    //     this.index += 2;
-                    // }
-
+                    ast.push(...this.getNodes(possibleTerms));
+                    this.index += 2;
                 } else {
                     const { bufferAST, bufferIndex, bufferSizeTokens, bufferTokens } = this.startRecursive();
                     const nodes = this.parser(possibleTerms);
@@ -127,6 +126,14 @@ class RecursiveDescentParser {
                     commonExpression.delete('ast');
                     commonExpression.upgradeBody(BuilderExpression.buildMathInstruction(ast));
                     commonExpression.extends({ subtype: TypeOfInstructionExpression.classification(token) });
+                }
+
+                else if (TypeOfInstructionExpression.classification(token) == TypeOfInstructionExpression.BRANCH_BLOCK) {
+                    commonExpression.delete('ast');
+                    const attributes = BuilderExpression.getAttributes(ast);
+                    SyntaxScannerExpression.scanBranchBlockInstruction(token, ast, possibleTerms);
+                    commonExpression.extends({ subtype: TypeOfInstructionExpression.classification(token) });
+                    commonExpression.upgradeBody(BuilderExpression.buildBranchBlockInstruction(ast, attributes));
                 }
 
                 else if (TypeOfInstructionExpression.classification(token) == TypeOfInstructionExpression.DECLARATION) {

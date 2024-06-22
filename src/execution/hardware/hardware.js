@@ -32,7 +32,21 @@ class Hardware {
             $eax: new Uint32Array(1),
             $ebx: new Uint32Array(1),
             $ecx: new Uint32Array(1),
-            $edx: new Uint32Array(1)
+            $edx: new Uint32Array(1),
+            $rax: new BigUint64Array(1),
+            $rbx: new BigUint64Array(1),
+            $rcx: new BigUint64Array(1),
+            $rdx: new BigUint64Array(1),
+            $rsi: new BigUint64Array(1),
+            $rdi: new BigUint64Array(1),
+            $rsp: new BigUint64Array(1),
+            $rbp: new BigUint64Array(1)
+        };
+
+        this.flags = {
+            $zf: new Uint8Array(1),
+            $cf: new Uint8Array(1),
+            $of: new Uint8Array(1)
         };
 
         this.NULL_TERMINATOR = 0x00;
@@ -54,6 +68,7 @@ class Hardware {
 
     types = this.#typeid;
     types_movement = this.#typeid_movement;
+    ostream_stdout_signals = { stream: 'stream' };
 
     #usedPointersForHeap = [];
     #usedPointersForMemory = [];
@@ -84,6 +99,22 @@ class Hardware {
 
     set_register_$edx(value) {
         this.registers.$edx.set([value]);
+    }
+
+    set_flag_$zf(value) {
+        this.flags.$zf.set([value]);
+    }
+
+    set_flag_$cf(value) {
+        this.flags.$cf.set([value]);
+    }
+
+    set_flag_$of(value) {
+        this.flags.$of.set([value]);
+    }
+
+    get_flag_$zf() {
+        return this.flags.$zf[0];
     }
 
     get_register_by_name(name) {
@@ -147,7 +178,8 @@ class Hardware {
             }
         }
 
-        let result_raw = 0x00;
+        let result_raw = args[0];
+        args.shift();
 
         switch (opcode) {
             case 'add':
@@ -187,7 +219,41 @@ class Hardware {
         return [$eax, $edx];
     }
 
-    ostream_stdout() {
+    inc(arg) {
+        if (arg?.type != this.#typeid_movement.reg) {
+            HardwareException.except(
+                'Expected register',
+                `first argument of 'inc $reg' instruction should be '$reg'`
+            );
+        }
+
+        const register_value = this.get_register_by_name(arg.name)[0];
+
+        if ((register_value + 1) == this.#fetch_maxsize_typeid_by_name(this.#fetch_typeid(this.get_register_by_name(arg.name)))) {
+            this.set_register_by_name(arg.name, 0);
+        } else {
+            this.set_register_by_name(arg.name, register_value + 1);
+        }
+    }
+
+    dec(arg) {
+        if (arg?.type != this.#typeid_movement.reg) {
+            HardwareException.except(
+                'Expected register',
+                `first argument of 'dec $reg' instruction should be '$reg'`
+            );
+        }
+
+        const register_value = this.get_register_by_name(arg.name)[0];
+
+        if ((register_value - 1) == -1) {
+            this.set_register_by_name(arg.name, 0);
+        } else {
+            this.set_register_by_name(arg.name, register_value - 1);
+        }
+    }
+
+    ostream_stdout(stdsig_t) {
         const value_ptr = this.stack_pop();
         
         if (this.#memory_micro_operation_pull_byte_by_pointer(value_ptr) == this.NULL_TERMINATOR) {
@@ -199,11 +265,34 @@ class Hardware {
             } else if (bytes.length == 1) {
                 // 16-bit or 8-bit
                 const num_t = bytes[0];
-                console.log(`0x${num_t.toString(16).padStart(8, 0)}`);
+
+                if (stdsig_t == this.ostream_stdout_signals.stream) {
+                    process.stdout.write(`${num_t}`);
+                } else {
+                    console.log(`0x${num_t.toString(16).padStart(8, 0)}`);
+                }
+
             } else if (bytes.length == 2) {
                 // 32-bit
                 const num_t = (bytes[1] << 16) | bytes[0];
-                console.log(`0x${num_t.toString(16).padStart(8, 0)}`);
+
+                if (stdsig_t == this.ostream_stdout_signals.stream) {
+                    process.stdout.write(`${num_t}`);
+                } else {
+                    console.log(`0x${num_t.toString(16).padStart(8, 0)}`);
+                }
+
+            } else if (bytes.length == 3) {
+                // 64-bit
+                const high = (bytes[4] << 24) | (bytes[3] << 16) | (bytes[2] << 8) | bytes[1];
+                const low = (bytes[5] << 24) | (bytes[6] << 16) | (bytes[7] << 8) | bytes[8];
+
+                if (stdsig_t == this.ostream_stdout_signals.stream) {
+                    process.stdout.write(`${high}${low}`);
+                } else {
+                    console.log(`0x${high.toString(16).padStart(8, 0)}${low.toString(16).padStart(8, 0)}`);
+                }
+
             } else {
                 console.log("null");
                 return;
@@ -211,7 +300,12 @@ class Hardware {
 
         } else {
             const bytes = this.memory_dump(value_ptr);
-            console.log(bytes.map(b => String.fromCharCode(b)).join(''));
+
+            if (stdsig_t == this.ostream_stdout_signals.stream) {
+                process.stdout.write(bytes.map(b => String.fromCharCode(b)).join(''));
+            } else {
+                console.log(bytes.map(b => String.fromCharCode(b)).join(''));
+            }
         }
     }
 
@@ -309,7 +403,11 @@ class Hardware {
         } else if (size instanceof Uint32Array) {
             return this.#typeid.uint32;
         }
-        
+
+        if (size == 0) {
+            return this.#typeid.uint8;
+        }
+
         if (size > 0 && size < 256) {
             return this.#typeid.uint8;
         } else if (size >= 256 && size < 65536) {
@@ -636,6 +734,18 @@ class Hardware {
         } else {
             HardwareException.except('first argument of movsx should be $reg');
         }
+    }
+
+    cmp(a, b) {  
+        if ([typeof a == 'number', typeof b == 'number'].includes(false)) {
+            HardwareException.except(`Unexpected error: two arguments of 'cmp imm, imm' should be numbers`);
+        }
+
+        const result_raw = a - b;
+
+        this.set_flag_$zf(result_raw == 0);
+        this.set_flag_$cf(b > a);
+        this.set_flag_$of(!Number.isSafeInteger(result_raw));
     }
 }
 
