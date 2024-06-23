@@ -1,9 +1,9 @@
 const SyntaxScannerExpression = require("../../parsing/scanner-syntax");
 const TypeOfAtomicExpression = require("../../types/expression.type");
-const TypeOfInstructionExpression = require("../../types/instruction.type");
 const Hardware = require("../hardware/hardware.js");
+const MemberBaseConstructor = require("./member-base.js");
 
-class ConditionInstructionMember {
+class ConditionInstructionMember extends MemberBaseConstructor {
     static __cmp__expr__(expression) {
         if (expression.body.ast[0].type != TypeOfAtomicExpression.ARGUMENTS) {
             SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected arguments');
@@ -41,19 +41,6 @@ class ConditionInstructionMember {
 
         const hardware = new Hardware();
         hardware.cmp(valueOfArguments[0], valueOfArguments[1]);
-    }
-
-    static generalImplementation(expression) {
-        const tokenInstruction = expression.body.id;
-        const mov_t = TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction);
-
-        const functions = Reflect.ownKeys(this).filter(func => func.endsWith('__expr__'));
-
-        if (functions.includes(`__${mov_t}__expr__`)) {
-            this[`__${mov_t}__expr__`](expression);
-        } else {
-            SyntaxScannerExpression.exceptDefaultTracewayException(tokenInstruction, 'Undefined instruction');
-        }
     }
 }
 

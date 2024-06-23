@@ -38,41 +38,35 @@ class IntermediateRepresentationCompiler {
                     }
                 }
 
-
-                if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.MODULE)) {
-                    ModuleMember.generalImplementation(expression);
-                }
-
-                else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.DECLARATION)) {
-                    FunctionalMember.generalImplementation(expression);
-                }
-
-                else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.STACK)) {
-                    StackMember.generalImplementation(expression);
-                }
-
-                else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.SYSTEM)) {
-                    SystemMember.generalImplementation(expression);
-                }
-
-                else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.MATHEMATICAL)) {
-                    MathematicalMember.generalImplementation(expression);
-                }
-
-                else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.MOVEMENT)) {
-                    MovementMember.generalImplementation(expression);
-                }
-
-                else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.JUMP)) {
-                    JumpMember.generalImplementation(expression);
-                }
-
-                else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.BRANCH_BLOCK, TypeOfInstructionExpression.BRANCH_INSTRUCTION)) {
-                    Branchmember.generalImplementation(expression);
-                }
-
-                else if (TypeOfInstructionExpression.existNameOfInstruction(expression.subtype, TypeOfInstructionExpression.CONDITION_INSTRUCTION)) {
-                    ConditionInstructionMember.generalImplementation(expression);
+                switch (expression.subtype) {
+                    case TypeOfInstructionExpression.MODULE:
+                        ModuleMember.generalImplementation(expression);
+                    break;
+                    case TypeOfInstructionExpression.DECLARATION:
+                        FunctionalMember.generalImplementation(expression);
+                    break;
+                    case TypeOfInstructionExpression.STACK:
+                        StackMember.generalImplementation(expression);
+                    break;
+                    case TypeOfInstructionExpression.SYSTEM:
+                        SystemMember.generalImplementation(expression);
+                    break;
+                    case TypeOfInstructionExpression.MATHEMATICAL:
+                        MathematicalMember.generalImplementation(expression);
+                    break;
+                    case TypeOfInstructionExpression.MOVEMENT:
+                        MovementMember.generalImplementation(expression);
+                    break;
+                    case TypeOfInstructionExpression.JUMP:
+                        JumpMember.generalImplementation(expression);
+                    break;
+                    case TypeOfInstructionExpression.BRANCH_BLOCK:
+                    case TypeOfInstructionExpression.BRANCH_INSTRUCTION:
+                        Branchmember.generalImplementation(expression);
+                    break;
+                    case TypeOfInstructionExpression.CONDITION_INSTRUCTION:
+                        ConditionInstructionMember.generalImplementation(expression);
+                    break;
                 }
                 
             } else {

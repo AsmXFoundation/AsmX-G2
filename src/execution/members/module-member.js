@@ -1,8 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const llvm = require("llvm.js/llvm");
-const exceptions = require("llvm.js/exceptions");
-const TypeOfInstructionExpression = require("../../types/instruction.type.js");
 const PerformerOfAtomicExpression = require("../perfer.js");
 const Router = require("../router.js");
 const RecursiveDescentParser = require('../../parsing/parser.js');
@@ -10,9 +8,10 @@ const Transformer = require('../../parsing/transformer.js');
 const Runtime = require('../runtime.js');
 const TypeOfExpression = require('../../types/expression.type.js');
 const SyntaxScannerExpression = require('../../parsing/scanner-syntax.js');
+const MemberBaseConstructor = require('./member-base.js');
 
-class ModuleMember {
-    static implementationImport(expression) {
+class ModuleMember extends MemberBaseConstructor {
+    static __import__expr__(expression) {
         const data = expression.body.ast;
         let pathOfModule;
 
@@ -58,22 +57,6 @@ class ModuleMember {
             }
         } else {
             SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'An exception in the implementation of module import');
-        }
-    }
-
-    static implementationExport(expression) {
-        
-    }
-
-    static generalImplementation(expression) {
-        const tokenInstruction = expression.body.id;
-
-        if (TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction) == 'import') {
-            ModuleMember.implementationImport(expression);
-        } else if (TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction) == 'export') {
-            ModuleMember.implementationExport(expression);
-        } else {
-            SyntaxScannerExpression.exceptDefaultTracewayException(tokenInstruction, 'Expected "import" or "export" keyword');
         }
     }
 }

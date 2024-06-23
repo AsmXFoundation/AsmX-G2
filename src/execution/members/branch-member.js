@@ -1,9 +1,9 @@
 const SyntaxScannerExpression = require("../../parsing/scanner-syntax");
 const TypeOfAtomicExpression = require("../../types/expression.type");
-const TypeOfInstructionExpression = require("../../types/instruction.type");
 const Enviroment = require("../storage/enviroment");
+const MemberBaseConstructor = require("./member-base.js");
 
-class Branchmember {
+class Branchmember extends MemberBaseConstructor {
     static __label__expr__(expression) {
         if (expression.body.name.type != TypeOfAtomicExpression.IDENTIFER) {
             SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected identifer');
@@ -32,19 +32,6 @@ class Branchmember {
         } else {
             const IntermediateRepresentationCompiler = require('../executor/executor.js');
             new IntermediateRepresentationCompiler(labelToGo.body.body.body);
-        }
-    }
-
-    static generalImplementation(expression) {
-        const tokenInstruction = expression.body.id;
-        const mov_t = TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction);
-
-        const functions = Reflect.ownKeys(this).filter(func => func.endsWith('__expr__'));
-
-        if (functions.includes(`__${mov_t}__expr__`)) {
-            this[`__${mov_t}__expr__`](expression);
-        } else {
-            SyntaxScannerExpression.exceptDefaultTracewayException(tokenInstruction, 'Undefined instruction');
         }
     }
 }

@@ -9,7 +9,7 @@ class AtomicIntermediateRepresentationCompiler {
     static /*#inline*/ complie(expression) {
         
         if (expression?.type == TypeOfAtomicExpression.CALL) {
-            return SystemMember.implementationCall(expression);
+            return SystemMember.__call__expr__(expression);
         } else if (expression?.type == TypeOfAtomicExpression.IDENTIFER) {
             const hardware = new Hardware();
 

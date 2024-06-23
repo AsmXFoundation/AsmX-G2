@@ -1,16 +1,15 @@
 const exceptions = require('llvm.js/exceptions');
 const SyntaxScannerExpression = require("../../parsing/scanner-syntax.js");
 const TypeOfAtomicExpression = require("../../types/expression.type.js");
-const TypeOfInstructionExpression = require("../../types/instruction.type.js");
 const RuntimeException = require("../exception/runtime.exception.js");
-const Router = require("../router.js");
 const Runtime = require("../runtime.js");
+const MemberBaseConstructor = require('./member-base.js');
 
 /**
  * @see {@link https://en.wikipedia.org/wiki/Functional_programming wikipedia article of functional programming}
  */
-class FunctionalMember {
-    static implementationFunction(expression) {
+class FunctionalMember extends MemberBaseConstructor {
+    static __function__expr__(expression) {
         const node = expression.body;
         let tokenOfName, name;
         let args = [];
@@ -67,20 +66,6 @@ class FunctionalMember {
             }
         } else {
 
-        }
-    }
-
-    static implementationTion(expression) {}
-
-    static generalImplementation(expression) {
-        const tokenInstruction = expression.body.id;
-
-        if (TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction) == 'function') {
-            FunctionalMember.implementationFunction(expression);
-        } else if (TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction) == 'tion') {
-            FunctionalMember.implementationTion(expression);
-        } else {
-            SyntaxScannerExpression.exceptDefaultTracewayException(tokenInstruction, 'Expected "function" or "tion" keyword');
         }
     }
 }

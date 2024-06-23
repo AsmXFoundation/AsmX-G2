@@ -1,13 +1,12 @@
-const SyntaxScannerExpression = require("../../parsing/scanner-syntax");
 const TypeOfAtomicExpression = require("../../types/expression.type");
-const TypeOfInstructionExpression = require("../../types/instruction.type");
 const RuntimeException = require("../exception/runtime.exception");
 const Hardware = require("../hardware/hardware");
 const BuiltinHardwareFunctions = require("../hardware/hardware-functions");
 const Runtime = require("../runtime");
+const MemberBaseConstructor = require("./member-base.js");
 
-class SystemMember {
-    static implementationSystem(expression) {
+class SystemMember extends MemberBaseConstructor {
+    static __system__expr__(expression) {
         if (expression.body.ast[0].type == TypeOfAtomicExpression.ARGUMENTS) {
             RuntimeException.exceptDefaultTracewayException(expression.body.id, 'takes only one argument');
         }
@@ -31,7 +30,7 @@ class SystemMember {
         }
     }
 
-    static implementationCall(expression) {
+    static __call__expr__(expression) {
         const BUFFER_TYPE_OF_ENVIROMENT = Runtime.TYPE_OF_ENVIROMENT;
         Runtime.TYPE_OF_ENVIROMENT = Runtime.TYPE_OF_ENVIROMENTS.LOCAL;
 
@@ -73,18 +72,6 @@ class SystemMember {
 
         Runtime.TYPE_OF_ENVIROMENT = BUFFER_TYPE_OF_ENVIROMENT;
         return return_;
-    }
-
-    static generalImplementation(expression) {
-        const tokenInstruction = expression.body.id;
-        
-        if (TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction) == 'system') {
-            this.implementationSystem(expression);
-        } else if (TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction) == 'call') {
-            this.implementationCall(expression);
-        } else {
-            SyntaxScannerExpression.exceptDefaultTracewayException(tokenInstruction, 'Expected "system" or "call" keyword');
-        }
     }
 }
 

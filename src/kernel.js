@@ -1,5 +1,6 @@
 const Core = require("./core.js");
 const Server = require("./server/server.js");
+const { execSync } = require('child_process');
 
 let argv = process.argv;
 argv.shift();
@@ -15,11 +16,17 @@ if (argv.length == 0) {
 }
 
 if (argv.length == 1) {
-    if (!['.asmx', 'asmx', '.asmX', 'asmX', '.🚀', '🚀'].map(filetype => argv[0].endsWith(filetype)).some(Boolean)) {
-        argv[0] += '.asmx';
+    if (argv[0] == 'update') {
+        Server.journal.info('Updating AsmX G2...');
+        execSync('git pull', {stdio: 'inherit'});
+        Server.journal.info('AsmX G2 updated');
+    } else {
+        if (!['.asmx', 'asmx', '.asmX', 'asmX', '.🚀', '🚀'].map(filetype => argv[0].endsWith(filetype)).some(Boolean)) {
+            argv[0] += '.asmx';
+        }
+
+        callAsmXG2(argv[0]);
     }
-    
-    callAsmXG2(argv[0]);
 }
 
 function helper() {

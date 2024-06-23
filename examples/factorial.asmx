@@ -18,7 +18,7 @@
 }
 
 @function main {
-    @mov $ecx, 3;
+    @mov $ecx, 5;
     @mov $eax, 1;
     @goto factorial;
 }

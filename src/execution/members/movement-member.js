@@ -1,10 +1,10 @@
 const SyntaxScannerExpression = require("../../parsing/scanner-syntax");
 const TypeOfAtomicExpression = require("../../types/expression.type");
-const TypeOfInstructionExpression = require("../../types/instruction.type");
 const HardwareArgument = require("../hardware/hardware-argument.js");
 const Hardware = require("../hardware/hardware.js");
+const MemberBaseConstructor = require("./member-base.js");
 
-class MovementMember {
+class MovementMember extends MemberBaseConstructor {
     static __mov__expr__(expression) {
         if (expression.body.ast[0].type != TypeOfAtomicExpression.ARGUMENTS) {
             SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected arguments');
@@ -63,19 +63,6 @@ class MovementMember {
         });
 
         hardware.movsx(...args_raw);
-    }
-
-    static generalImplementation(expression) {
-        const tokenInstruction = expression.body.id;
-        const mov_t = TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction);
-
-        const functions = Reflect.ownKeys(MovementMember).filter(func => func.endsWith('__expr__'));
-
-        if (functions.includes(`__${mov_t}__expr__`)) {
-            MovementMember[`__${mov_t}__expr__`](expression);
-        } else {
-            SyntaxScannerExpression.exceptDefaultTracewayException(tokenInstruction, 'Undefined movement instruction');
-        }
     }
 }
 

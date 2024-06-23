@@ -21,6 +21,7 @@ asmx //examples/hello.asmx
 - [Chapter 1: Introduction to AsmX G2](#chapter-1-introduction-to-asmx-g2)
 - [Chapter 2: Setting Up the Development Environment](#chapter-2-setting-up-the-development-environment)
 - [Chapter 3: Basic Syntax and Structure](#chapter-3-basic-syntax-and-structure)
+- [Chapter 4: Updating AsmX G2](#chapter-4-updating-asmx-g2)
 
 
 ## Chapter 1: Introduction to AsmX G2
@@ -96,6 +97,25 @@ asmx your_file_name.asmx
 ```
 
 Congratulations! You have just written and executed your first AsmX G2 program.
+
+## Chapter 4: Updating AsmX G2
+
+AsmX G2 now includes a convenient command to update to the latest version. To use this feature, simply run:
+```
+asmx update
+```
+This command will:
+
+1. Check for the latest stable version of AsmX G2
+2. Download the new version if available
+3. Install the update
+4. Restart the AsmX G2 service (if applicable)
+
+### Notes:
+- Ensure you have an active internet connection when running the update command.
+- The update process may require administrative privileges, depending on your system configuration.
+- It's recommended to back up your current AsmX G2 configuration before updating.
+- If you encounter any issues during the update process, please refer to our troubleshooting guide or open an issue on our GitHub repository.
 
 # Architecture
 The AsmX architecture includes a main stack, two cores, a unique numeric representation, and a memory architecture. The first kernel is responsible for calling the compiler, which then compiles the source code into an intermediate representation. The second core is responsible for assembling and executing the code. This design ensures efficient code execution and optimization.
