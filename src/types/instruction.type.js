@@ -48,7 +48,7 @@ class TypeOfInstructionExpression {
             [this.has(instruction.lexem, 'jnz', 'jle', 'jmp')]:                             this.JUMP,
             [this.has(instruction.lexem, 'cmp')]:                                           this.CONDITION_INSTRUCTION,
 
-            [this.has(instruction.lexem, 'store')]:                                         this.MMX_INSTRUCTION,
+            [this.has(instruction.lexem, 'store', 'emms')]:                                 this.MMX_INSTRUCTION,
             
             [this.has(instruction.lexem, 'push', 'pop')]:                                   this.STACK,
             [this.has(instruction.lexem, 'export', 'import')]:                              this.MODULE,

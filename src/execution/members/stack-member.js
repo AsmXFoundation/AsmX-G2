@@ -1,7 +1,7 @@
 const TypeOfAtomicExpression = require("../../types/expression.type");
 const RuntimeException = require("../exception/runtime.exception");
-const AtomicIntermediateRepresentationCompiler = require("../executor/executor-atomic");
 const Hardware = require("../hardware/hardware");
+const HardwareArgument = require("../hardware/hardware-argument");
 const MemberBaseConstructor = require("./member-base");
 
 class StackMember extends MemberBaseConstructor {
@@ -9,8 +9,10 @@ class StackMember extends MemberBaseConstructor {
         if (expression.body.ast[0].type == TypeOfAtomicExpression.ARGUMENTS) {
             RuntimeException.exceptDefaultTracewayException(expression.body.id, 'takes only one argument');
         }
+        
+        const arg = expression.body.ast[0];
+        let valueOfArgument = HardwareArgument.fetch_raw(arg, HardwareArgument.fetch_typeid(arg));
 
-        const valueOfArgument = AtomicIntermediateRepresentationCompiler.complie(expression.body.ast[0]);
         const hardware = new Hardware();
         hardware.stack_push(valueOfArgument);
     }

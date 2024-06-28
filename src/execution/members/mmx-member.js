@@ -7,12 +7,13 @@ const HardwareException = require("../hardware/hardware-exception");
 
 class MMXInstructionMember {
     static generalImplementation(expression) {
-        if (expression.body.ast[0].type != TypeOfAtomicExpression.ARGUMENTS) {
-            SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected arguments');
+        const tokenInstruction = expression.body.id;
+        let args = expression.body.ast;
+
+        if (expression.body.ast[0]?.type == TypeOfAtomicExpression.ARGUMENTS) {
+            args = expression.body.ast[0].body.values;
         }
 
-        const tokenInstruction = expression.body.id;
-        const args = expression.body.ast[0].body.values;
         const action_t = TypeOfInstructionExpression.extractNameOfInstruction(tokenInstruction);
 
         let valueOfArguments = args.map(arg => {
@@ -22,6 +23,10 @@ class MMXInstructionMember {
         const hardware = new Hardware();
 
         if (action_t == 'store') {
+            if (expression.body.ast[0].type != TypeOfAtomicExpression.ARGUMENTS) {
+                SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected arguments');
+            }
+
             if ([args.length > 2, args.length < 2].includes(true)) {
                 HardwareException.except(
                     'takes exactly 2 arguments',
@@ -31,6 +36,12 @@ class MMXInstructionMember {
             }
 
             hardware.mmx_store(...valueOfArguments);
+        } else if (action_t == 'emms') {
+            if (args.length != 0) {
+                SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected no arguments');
+            }
+
+            hardware.mmx_emms();
         }
     }
 }

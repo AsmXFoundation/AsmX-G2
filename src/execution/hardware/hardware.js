@@ -402,6 +402,10 @@ class Hardware {
         return this.stack.at(this.stackPhysicalPointer - 1);
     }
 
+    #memory_micro_operation_write_byte_by_pointer(pointer, value) {
+        this.memory.set([value], pointer);
+    }
+
     #memory_micro_operation_pull_byte_by_pointer(pointer) {
         return this.memory.at(pointer);
     }
@@ -417,6 +421,15 @@ class Hardware {
     stack_push(value) {
         if (this.stackPhysicalPointer >= this.stackPointer) {
             HardwareException.except("Stack overflow");
+        }
+
+        if (typeof value != 'string') {
+            const value_form = value?.type;
+            value = this.#handler_explicit_source_get_argument_value(value);
+
+            if (value_form == this.#typeid_movement.mem) {
+                value = this.#memory_micro_operation_pull_byte_by_pointer(value);
+            }
         }
 
         // instert address in stack for memory reading
@@ -456,6 +469,9 @@ class Hardware {
             }
 
             this.#memory_micro_operation_push(this.NULL_TERMINATOR);
+        } else if (typeof value == 'number' && this.#fetch_typeid(value) == this.#typeid.uint8) {
+            this.#memory_micro_operation_push(this.NULL_TERMINATOR);
+            this.#memory_micro_operation_push(value);
         } else {
             value = value & 0xFF;
     
@@ -480,6 +496,60 @@ class Hardware {
         }
 
         return bytes;
+    }
+
+    #handler_argument_typeid_mem_get_value(argument) {
+        let ptr_uint16;
+
+        if (argument.ptr_t  == this.#typeid_movement.imm) {
+            ptr_uint16 = parseInt(argument.ptr);
+        } else if (argument.ptr_t  == this.#typeid_movement.reg) {
+            ptr_uint16 = this.get_register_by_name(argument.ptr);
+        } else {
+            HardwareException.except(`Unknown argument type`);
+        }
+
+        return ptr_uint16;
+    }
+
+    #handler_basic_cases_explicit_get_argument_value(argument) {
+        if (argument?.type == this.#typeid_movement.reg) {
+            return this.get_register_by_name(argument.name);
+        } else if (argument?.type == this.#typeid_movement.mem) {
+            return this.#handler_argument_typeid_mem_get_value(argument);
+        }
+    }
+
+    #handler_explicit_destination_get_argument_value(destination) {
+        let destination_value = this.ZERO_VALUE;
+
+        if (this.#handler_basic_cases_explicit_get_argument_value(destination)) {
+            destination_value = this.#handler_basic_cases_explicit_get_argument_value(destination);
+        } else {
+            HardwareException.except(`Unknown argument type`);
+        }
+
+        return destination_value;
+    }
+
+    #handler_explicit_source_get_argument_value(source) {
+        let source_value = this.ZERO_VALUE;
+
+        if (source?.type == this.#typeid_movement.imm) {
+            source_value = source.value;
+        } else if (this.#handler_basic_cases_explicit_get_argument_value(source)) {
+            source_value = this.#handler_basic_cases_explicit_get_argument_value(source);
+        } else {
+            HardwareException.except(`Unknown argument type`);
+        }
+
+        return source_value;
+    }
+
+    #handler_strict_is_mmx_register_vec(source, exception_message) {
+        if (source?.type == this.#typeid_movement.reg && this.#is_mmx_register_vec(source.name)) {
+            HardwareException.except(exception_message);
+        }
     }
 
     #fetch_typeid(size) {
@@ -736,32 +806,16 @@ class Hardware {
     }
 
     mov(destination, source) {
+        this.#handler_strict_is_mmx_register_vec(destination, `Cannot move to MMX register ${destination.name} as a destination.`);
+        this.#handler_strict_is_mmx_register_vec(source, `Cannot move from MMX register ${source.name} as a source.`);
+
+        const source_val = this.#handler_explicit_source_get_argument_value(source);
+
         if (destination?.type == this.#typeid_movement.reg) {
-            if (source?.type == this.#typeid_movement.imm) {
-                this.set_register_by_name(destination.name, source.value);
-            } else if (source?.type == this.#typeid_movement.reg) {
-                this.set_register_by_name(destination.name, this.get_register_by_name(source.name));
-            } else if (source?.type == this.#typeid_movement.mem) {
-                let type_of_ptr, ptr_uint16;
-
-                if (source.ptr_t  == this.#typeid_movement.imm) {
-                    type_of_ptr = this.#fetch_typeid(parseInt(source.ptr));
-                    ptr_uint16 = parseInt(source.ptr);
-                } else if (source.ptr_t  == this.#typeid_movement.reg) {
-                    type_of_ptr = this.#fetch_typeid(this.get_register_by_name(source.ptr));
-                    ptr_uint16 = this.get_register_by_name(source.ptr);
-                }
-
-                if (type_of_ptr != this.#typeid.uint16) {
-                    HardwareException.except(
-                        `second argument of 'mov $reg, [${this.#typeid.uint16} ptr]' should be '${this.#typeid.uint16}'`
-                    );
-                }
-
-                this.set_register_by_name(destination.name, this.memory_dump(ptr_uint16));
-            }
-        } else {
-            HardwareException.except('first argument of mov should be $reg');
+            this.set_register_by_name(destination.name, source_val);
+        } else if (destination?.type == this.#typeid_movement.mem) {
+            const destination_ptr = this.#handler_explicit_destination_get_argument_value(destination);
+            this.#memory_micro_operation_write_byte_by_pointer(destination_ptr, source_val);
         }
     }
 
@@ -873,6 +927,16 @@ class Hardware {
         this.#mmx_overload_registers();
     }
 
+    #mmx_explicit_clear_register_vec(name) {
+        this.mmx_registers_vec[name] = [];
+        this.#mmx_overload_registers();
+    }
+
+    #mmx_explicit_rollback_register_vec(name) {
+        this.mmx_registers_vec[name] = [this.#make_typeid_by_name(this.#typeid.uint64, 0x01)];
+        this.#mmx_overload_registers();
+    }
+
     mmx_store(destination, source) {
         if (destination?.type != this.#typeid_movement.reg) {
             HardwareException.except('first argument of store should be $reg');
@@ -915,7 +979,7 @@ class Hardware {
         const index = this.get_register_by_name(register_index_name)[0];
 
         if (index == 0) {
-            this.mmx_registers_vec[destination.name] = [];
+            this.#mmx_explicit_clear_register_vec(vec_name);
             const count = max_bytes / this.#fetch_sizeof_by_name(item_t);
 
             for (let i = 0, counter = count; i < counter; i++) {
@@ -942,6 +1006,12 @@ class Hardware {
 
         this.#mmx_register_vec_set(destination.name, source?.ptr?.value, reloaded_index);
         this.set_register_by_name(register_index_name, reloaded_index + 1);
+    }
+
+    mmx_emms() {
+        for (const key in this.mmx_registers_vec) {
+            this.#mmx_explicit_rollback_register_vec(key);
+        }
     }
 }
 
