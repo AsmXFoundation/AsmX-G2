@@ -533,7 +533,7 @@ class RecursiveDescentParser {
 
                 if (lastItemOfAST) {
                     commonExpression.upgradeType(TypeOfAtomicExpression.MEMBER);
-                    commonExpression.upgradeBody({ point: this.getLastItemAST(), link: nodes[0] });
+                    commonExpression.upgradeBody({ point: this.getLastItemAST(), link: nodes[0], isArrayForm: true });
                 } else {
                     commonExpression.upgradeType(TypeOfAtomicExpression.ARRAY);
                     commonExpression.upgradeBody({ values: nodes[0] });

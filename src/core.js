@@ -25,7 +25,7 @@ class Core {
         if (fs.existsSync(src)) {
             Server.journal.process(`Building llvm.js ...`);
 
-            llvm.Config.setCommentLine('#');
+            llvm.Config.setCommentLine(';;');
             llvm.Config.setCommentBlock('/*');
             llvm.Keywords.put('extends', 'as');
             llvm.Tokens.put({ name: 'ARROW', lexem: '->' });

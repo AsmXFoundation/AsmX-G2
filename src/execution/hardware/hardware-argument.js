@@ -14,11 +14,19 @@ class HardwareArgument {
             return hardware.types_movement.imm;
         }  else if (token.type == TypeOfAtomicExpression.ARRAY) {
             return hardware.types_movement.mem;
+        } else if (token.type == TypeOfAtomicExpression.MEMBER) {
+            if (token.body?.isArrayForm) {
+                return hardware.types_movement.tar;
+            }
         }
     }
 
     static fetch_raw(token, type) {
         const hardware = new Hardware();
+
+        if (type == undefined) {
+            HardwareException.except(`Unsupported argument type`);
+        }
 
         if (type == hardware.types_movement.reg) {
             return { type, name: token.lexem };
@@ -47,6 +55,24 @@ class HardwareArgument {
             }
 
             RuntimeException.exceptDefaultTracewayException(token.body.parentheses[0], 'Unsupported memory argument');
+        } else if (type == hardware.types_movement.tar) {
+            if (token.body.point.type != TypeOfAtomicExpression.IDENTIFER) {
+                RuntimeException.exceptDefaultTracewayException(token.body.parentheses[0], 'Unsupported target argument');
+            }
+
+            if (this.fetch_typeid(token.body.link) == undefined) {
+                RuntimeException.exceptDefaultTracewayException(token.body.parentheses[0], 'Unsupported target argument');
+            }
+
+            if (this.fetch_typeid(token.body.link) == hardware.types_movement.tar) {
+                RuntimeException.exceptDefaultTracewayException(token.body.parentheses[0], 'Unsupported target argument');
+            }
+
+            return {
+                type: hardware.types_movement.tar,
+                ptr: this.fetch_raw(token.body.link, this.fetch_typeid(token.body.link)),
+                tar: token.body.point.body.identifer.lexem
+            };
         }
     }
 }

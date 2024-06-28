@@ -64,16 +64,16 @@ In this chapter, we will explore the fundamental syntax and structure of AsmX G2
 Every AsmX G2 program must have a `main` function, which serves as the entry point of the program. The `main` function is defined using the `@function` keyword followed by the function name and a pair of parentheses. Here's an example:
 ```
 @function main() {
-  # Your code goes here
+  ;; Your code goes here
 }
 ```
 
 It is important to note that AsmX G2 executes the `main` function only when it encounters its definition. Re-declaring the `main` function will result in an error.
 
 ### Comments
-Comments in AsmX G2 are denoted by the `#` symbol. Any text following the `#` symbol on a line is considered a comment and is ignored by the compiler. Comments are useful for adding explanatory notes and improving code readability. For example:
+Comments in AsmX G2 are denoted by the `;;` symbol. Any text following the `;;` symbol on a line is considered a comment and is ignored by the compiler. Comments are useful for adding explanatory notes and improving code readability. For example:
 ```
-# This is a single-line comment
+;; This is a single-line comment
 ```
 
 ### Hello, World! Program
@@ -116,14 +116,3 @@ This command will:
 - The update process may require administrative privileges, depending on your system configuration.
 - It's recommended to back up your current AsmX G2 configuration before updating.
 - If you encounter any issues during the update process, please refer to our troubleshooting guide or open an issue on our GitHub repository.
-
-# Architecture
-The AsmX architecture includes a main stack, two cores, a unique numeric representation, and a memory architecture. The first kernel is responsible for calling the compiler, which then compiles the source code into an intermediate representation. The second core is responsible for assembling and executing the code. This design ensures efficient code execution and optimization.
-
-AsmX supports the use of registers, instructions, functions and object-oriented programming. Its memory architecture is also tailored to provide flexibility and optimization capabilities.
-
-AsmX can be thought of as a compiler in that it takes high-level source code and transforms it into a lower-level representation that can be executed. This process includes parsing, intermediate representation creation, code optimization, and target code generation.
-
-Essentially, AsmX is a programming language implemented in Node.js that compiles source code into an intermediate representation. Its architecture includes a main stack, two cores, a unique number representation system, and its own memory architecture. AsmX supports the use of registers, instructions, functions and object-oriented programming.
-
-AsmX can also be thought of as an intermediate representation compiler (IRC) because it compiles source code into an intermediate representation, allowing further optimization and execution on a virtual machine or simulated architecture. It is important to note that AsmX is not an interpreter because it does not directly execute source code line by line. Instead, the first kernel calls the compiler, which then compiles the source code into an intermediate representation, and the second kernel assembles and executes the code.

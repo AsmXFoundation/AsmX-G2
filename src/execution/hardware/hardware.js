@@ -26,25 +26,70 @@ class Hardware {
 
         this.usedHeapSize = 0x0000_0000;
 
+        this.mmx_registers_vec = {
+            $mm0: [new BigUint64Array(1)],
+            $mm1: [new BigUint64Array(1)],
+            $mm2: [new BigUint64Array(1)],
+            $mm3: [new BigUint64Array(1)],
+            $mm4: [new BigUint64Array(1)],
+            $mm5: [new BigUint64Array(1)],
+            $mm6: [new BigUint64Array(1)],
+            $mm7: [new BigUint64Array(1)],
+        };
+
+        this.mmx_registers_reg = {
+            $mmi0: new Uint8Array(1),
+            $mmi1: new Uint8Array(1),
+            $mmi2: new Uint8Array(1),
+            $mmi3: new Uint8Array(1),
+            $mmi4: new Uint8Array(1),
+            $mmi5: new Uint8Array(1),
+            $mmi6: new Uint8Array(1),
+            $mmi7: new Uint8Array(1),
+        };
+
         this.registers = {
             $ax: new Uint16Array(1),
+            $bx: new Uint16Array(1),
+            $cx: new Uint16Array(1),
+            $dx: new Uint16Array(1),
+            $si: new Uint16Array(1),
+            $di: new Uint16Array(1),
+            $bp: new Uint16Array(1),
             $sp: new Uint16Array(1),
+            
             $eax: new Uint32Array(1),
             $ebx: new Uint32Array(1),
             $ecx: new Uint32Array(1),
             $edx: new Uint32Array(1),
             $esi: new Uint32Array(1),
             $edi: new Uint32Array(1),
-            $esp: new Uint32Array(1),
             $ebp: new Uint32Array(1),
+            $esp: new Uint32Array(1),
+
             $rax: new BigUint64Array(1),
             $rbx: new BigUint64Array(1),
             $rcx: new BigUint64Array(1),
             $rdx: new BigUint64Array(1),
             $rsi: new BigUint64Array(1),
             $rdi: new BigUint64Array(1),
+            $rbp: new BigUint64Array(1),
             $rsp: new BigUint64Array(1),
-            $rbp: new BigUint64Array(1)
+
+            $imm0: new Uint8Array(1),
+            $imm1: new Uint8Array(1),
+            $imm2: new Uint8Array(1),
+            $imm3: new Uint8Array(1),
+            $imm4: new Uint8Array(1),
+            $imm5: new Uint8Array(1),
+            $imm6: new Uint8Array(1),
+            $imm7: new Uint8Array(1),
+            $imm8: new Uint8Array(1),
+            $imm9: new Uint8Array(1),
+            $imm10: new Uint8Array(1),
+
+            ...this.mmx_registers_vec,
+            ...this.mmx_registers_reg
         };
 
         this.flags = {
@@ -54,6 +99,8 @@ class Hardware {
         };
 
         this.NULL_TERMINATOR = 0x00;
+        this.BITS_IN_PER_BYTE = 8;
+        this.ZERO_VALUE = 0x00;
 
         if (Hardware.instance) {
             return Hardware.instance;
@@ -62,12 +109,16 @@ class Hardware {
         Hardware.instance = this;
     }
 
-    #typeid = {
+    #typeid_uints = {
         uint8: 'uint8', uint16: 'uint16',  uint32: 'uint32', uint64: 'uint64'
     }
 
+    #typeid = {
+        ...this.#typeid_uints,
+    }
+
     #typeid_movement = {
-        reg: 'reg', mem: 'mem', imm: 'imm'
+        reg: 'reg', mem: 'mem', imm: 'imm', tar: 'tar'
     }
 
     types = this.#typeid;
@@ -131,17 +182,33 @@ class Hardware {
 
     set_register_by_name(name, value) {
         if (name in this.registers) {
+            if (this.registers[name] instanceof BigUint64Array) {
+                value = BigInt(value);
+            }
+
             this.registers[name].set([value]);
         } else {
             HardwareException.except(`Register '${name}' not found`);
         }
     }
 
-    randomAddress() {
+    #is_mmx_register_vec(name) {
+        return (name in this.mmx_registers_vec);
+    }
+
+    #is_mmx_register_reg(name) {
+        return (name in this.mmx_registers_reg);
+    }
+
+    #is_typeid(name) {
+        return (name in this.#typeid);
+    }
+
+    random_address() {
         return Math.floor(Math.random() * 0x1000_0000);
     }
 
-    randomAddressByRange(min, max) {
+    random_address_by_range(min, max) {
         return Math.floor(Math.random() * (max - min)) + min;
     }
 
@@ -184,6 +251,10 @@ class Hardware {
 
         let result_raw = args[0];
         args.shift();
+
+        if (args.length == 0) {
+            args.push(result_raw);
+        }
 
         switch (opcode) {
             case 'add':
@@ -352,7 +423,9 @@ class Hardware {
         this.#stack_micro_operation_push(this.memoryPhysicalPointer);
         this.#set_register_$sp();
 
-        if ([value instanceof Uint16Array, value instanceof Uint8Array].includes(true)) {
+        if (Array.isArray(value)) {
+            this.stack_push(`[${value.join(', ')}]`);
+        } else if ([value instanceof Uint16Array, value instanceof Uint8Array].includes(true)) {
             if (value.length == 1) {
                 this.#memory_micro_operation_push(this.NULL_TERMINATOR);
                 this.#memory_micro_operation_push(value[0]);
@@ -364,6 +437,16 @@ class Hardware {
                 value = value[0];
                 this.#memory_micro_operation_push(value & 0xFFFF);
                 this.#memory_micro_operation_push((value >> 16) & 0xFFFF);
+            }
+
+        } else if (value instanceof BigUint64Array) {
+            if (value.length == 1) {
+                this.#memory_micro_operation_push(this.NULL_TERMINATOR);
+                value = value[0];
+                this.#memory_micro_operation_push(Number(value & 0xFFFFn));
+                this.#memory_micro_operation_push(Number((value >> 16n) & 0xFFFFn));
+                this.#memory_micro_operation_push(Number((value >> 32n) & 0xFFFFn));
+                this.#memory_micro_operation_push(Number((value >> 48n) & 0xFFFFn));
             }
 
         } else if (typeof value === "string") {
@@ -393,26 +476,28 @@ class Hardware {
 
         while (this.#memory_micro_operation_pull_byte_by_pointer(ptr)) {
             bytes.push(this.#memory_micro_operation_pull_byte_by_pointer(ptr));
-            ptr = (ptr + 0x1) & this.maxsize;
+            ptr = (ptr + 0x01) & this.maxsize;
         }
 
         return bytes;
     }
 
     #fetch_typeid(size) {
-        if (size instanceof Uint8Array) {
-            return this.#typeid.uint8;
+        if (size instanceof BigUint64Array) {
+            return this.#typeid.uint64;
+        } if (size instanceof Uint32Array) {
+            return this.#typeid.uint32;
         } else if (size instanceof Uint16Array) {
             return this.#typeid.uint16;
-        } else if (size instanceof Uint32Array) {
-            return this.#typeid.uint32;
-        }
-
-        if (size == 0) {
+        } else if (size instanceof Uint8Array) {
             return this.#typeid.uint8;
         }
 
-        if (size > 0 && size < 256) {
+        else if (size == 0) {
+            return this.#typeid.uint8;
+        }
+
+        else if (size > 0 && size < 256) {
             return this.#typeid.uint8;
         } else if (size >= 256 && size < 65536) {
             return this.#typeid.uint16;
@@ -475,6 +560,20 @@ class Hardware {
         }
     }
 
+    #make_typeid_by_name(name, count = 1) {
+        if (name == this.#typeid.uint8) {
+            return new Uint8Array(count);
+        } else if (name == this.#typeid.uint16) {
+            return new Uint16Array(count);
+        } else if (name == this.#typeid.uint32) {
+            return new Uint32Array(count);
+        } else if (name == this.#typeid.uint64) {
+            return new BigUint64Array(count);
+        } else {
+            HardwareException.except(`Invalid type: ${name}`);
+        }
+    }
+
     #tostring16(num_t) {
         return num_t.toString(16);
     }
@@ -520,26 +619,26 @@ class Hardware {
             }
 
             this.#usedPointersForHeap.push(ptr_uint16);
-            this.#usedPointersForHeap.push(ptr_uint16 + 0x1); // for FILL NULL TERMINATOR
+            this.#usedPointersForHeap.push(ptr_uint16 + 0x01); // for FILL NULL TERMINATOR
 
-            this.usedHeapSize += 0x3;
+            this.usedHeapSize += 0x03;
         } else if (malloc_value_type === this.#typeid.uint16) {
             while ([
                 this.#usedPointersForHeap.includes(ptr_uint16),
-                this.#usedPointersForHeap.includes(ptr_uint16 + 0x1)
+                this.#usedPointersForHeap.includes(ptr_uint16 + 0x01)
             ].every(Boolean)) {
                 ptr_uint16 = this.#gen_random_uint16();
             }
 
             this.#usedPointersForHeap.push(ptr_uint16);
-            this.#usedPointersForHeap.push(ptr_uint16 + 0x1);
-            this.#usedPointersForHeap.push(ptr_uint16 + 0x2); // for FILL NULL TERMINATOR
+            this.#usedPointersForHeap.push(ptr_uint16 + 0x01);
+            this.#usedPointersForHeap.push(ptr_uint16 + 0x02); // for FILL NULL TERMINATOR
 
-            this.usedHeapSize += 0x4;
+            this.usedHeapSize += 0x04;
         }
 
         // NULL TERMINATOR
-        this.#usedPointersForHeap.push(0x0);
+        this.#usedPointersForHeap.push(0x00);
         
         // instert address in stack for heap reading
         this.#stack_micro_operation_push(ptr_uint16);
@@ -607,12 +706,12 @@ class Hardware {
             HardwareException.except(`Pointer '${ptr_uint16}' is not in heap`);
         }
 
-        while (this.#usedPointersForHeap[index_t] != 0x0) {
+        while (this.#usedPointersForHeap[index_t] != 0x00) {
             this.#usedPointersForHeap.splice(index_t, 1);
-            this.usedHeapSize -= 0x1;
+            this.usedHeapSize -= 0x01;
         }
 
-        this.usedHeapSize -= 0x1;
+        this.usedHeapSize -= 0x01;
     }
 
     mem_free(ptr) {
@@ -631,7 +730,7 @@ class Hardware {
             HardwareException.except(`Pointer '${ptr_uint16}' is not in memory`);
         }
 
-        while (this.#usedPointersForMemory[index_t] != 0x0) {
+        while (this.#usedPointersForMemory[index_t] != 0x00) {
             this.#usedPointersForMemory.splice(index_t, 1);
         }
     }
@@ -750,6 +849,99 @@ class Hardware {
         this.set_flag_$zf(result_raw == 0);
         this.set_flag_$cf(b > a);
         this.set_flag_$of(!Number.isSafeInteger(result_raw));
+    }
+
+    #mmx_get_register_reg_name_by_vec_name(name) {
+        return `$mmi${Number.parseInt(name.substring(3))}`;
+    }
+
+    #mmx_overload_registers() {
+        this.registers = {...this.registers, ...this.mmx_registers_reg, ...this.mmx_registers_vec};
+    }
+
+    #mmx_register_vec_set(name, value, index = 0) {
+        if (this.mmx_registers_vec[name][index] instanceof BigUint64Array) {
+            value = BigInt(value);
+        }
+
+        this.mmx_registers_vec[name][index].set([value]);
+        this.#mmx_overload_registers();
+    }
+
+    #mmx_rollback_index_to_initial_value(name) {
+        this.mmx_registers_reg[name].set([this.ZERO_VALUE]);
+        this.#mmx_overload_registers();
+    }
+
+    mmx_store(destination, source) {
+        if (destination?.type != this.#typeid_movement.reg) {
+            HardwareException.except('first argument of store should be $reg');
+        }
+
+        if (!this.#is_mmx_register_vec(destination.name)) {
+            HardwareException.except(
+                'store instruction can be used only with mmx registers',
+                `mmx registers: ${Object.keys(this.mmx_registers_vec).join(', ')}`
+            );
+        }
+
+        if (source?.type != this.#typeid_movement.tar) {
+            HardwareException.except(
+                `second argument of store should be 'type[]'`
+            );
+        }
+
+        const item_t = source?.tar;
+        const vec_name = destination.name;
+
+        if (!this.#is_typeid(item_t)) {
+            HardwareException.except(
+                `the type '${item_t}' is not found`
+            );
+        }
+
+        const typeid_element = this.#fetch_typeid(source?.ptr?.value);
+        const element_bytes = this.#fetch_sizeof_by_name(typeid_element);
+        const definition_bytes = this.#fetch_sizeof_by_name(item_t);
+
+        if (element_bytes > definition_bytes) {
+            HardwareException.except(
+                `Specified type '${source?.tar}' does not match the type '${typeid_element}' in the element of the array`
+            );
+        }
+
+        const max_bytes = this.#fetch_sizeof_by_name(this.#typeid_uints.uint64);
+        const register_index_name = this.#mmx_get_register_reg_name_by_vec_name(vec_name);
+        const index = this.get_register_by_name(register_index_name)[0];
+
+        if (index == 0) {
+            this.mmx_registers_vec[destination.name] = [];
+            const count = max_bytes / this.#fetch_sizeof_by_name(item_t);
+
+            for (let i = 0, counter = count; i < counter; i++) {
+                this.mmx_registers_vec[vec_name].push(
+                    this.#make_typeid_by_name(item_t)
+                );
+            }
+
+        } else {
+            const typeid_element_vec = this.#fetch_typeid(this.mmx_registers_vec[vec_name][this.ZERO_VALUE]);
+
+            if (item_t != typeid_element_vec) {
+                HardwareException.except(
+                    `Specified type '${item_t}' does not match the type '${typeid_element_vec}' in the element of the array`
+                );
+            }
+        }
+
+        if (this.mmx_registers_vec[vec_name].length <= index) {
+            this.#mmx_rollback_index_to_initial_value(register_index_name);
+        }
+
+        const reloaded_index = this.get_register_by_name(register_index_name)[0];
+
+        this.#mmx_register_vec_set(destination.name, source?.ptr?.value, reloaded_index);
+        this.set_register_by_name(register_index_name, reloaded_index + 1);
     }
 }
 

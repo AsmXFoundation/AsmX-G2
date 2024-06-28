@@ -36,6 +36,8 @@ class TypeOfInstructionExpression {
     static DATA_STRUCTURE =                 this.conv('DataStructure');
     static USER =                           this.conv('User');
 
+    static MMX_INSTRUCTION =                this.conv('MMXInstruction');
+
     static classification(instruction) {
         return CustomSwitch.switch(this.USER, {
             [this.has(instruction.lexem, 'add', 'sub', 'mul', 'div', 'inc', 'dec')]:        this.MATHEMATICAL,
@@ -45,6 +47,8 @@ class TypeOfInstructionExpression {
             [this.has(instruction.lexem, 'goto')]:                                          this.BRANCH_INSTRUCTION,
             [this.has(instruction.lexem, 'jnz', 'jle', 'jmp')]:                             this.JUMP,
             [this.has(instruction.lexem, 'cmp')]:                                           this.CONDITION_INSTRUCTION,
+
+            [this.has(instruction.lexem, 'store')]:                                         this.MMX_INSTRUCTION,
             
             [this.has(instruction.lexem, 'push', 'pop')]:                                   this.STACK,
             [this.has(instruction.lexem, 'export', 'import')]:                              this.MODULE,
