@@ -8,7 +8,9 @@ class HardwareArgument {
     static fetch_typeid(token) {
         const hardware = new Hardware();
 
-        if (token.type == TypeOfToken.REGISTER) {
+        if (token.subtype == TypeOfAtomicExpression.LITERALS.STRING) {
+            return hardware.types_movement.str;
+        } else if (token.type == TypeOfToken.REGISTER) {
             return hardware.types_movement.reg;
         } else if (token.subtype == TypeOfAtomicExpression.LITERALS.NUMBER || token.subtype == TypeOfAtomicExpression.LITERALS.BOOLEAN) {
             return hardware.types_movement.imm;
@@ -28,7 +30,9 @@ class HardwareArgument {
             HardwareException.except(`Unsupported argument type`);
         }
 
-        if (type == hardware.types_movement.reg) {
+        if (type == hardware.types_movement.str) {
+            return { type, value: token.body.string.lexem.slice(1, -1) };
+        } else if (type == hardware.types_movement.reg) {
             return { type, name: token.lexem };
         } else if (type == hardware.types_movement.imm) {
             let value = 0x00;

@@ -15,6 +15,13 @@ if (argv.length == 0) {
     helper();
 }
 
+let parameters = { anonimous: false };
+
+if (argv.includes('--tor')) {
+    argv.splice(argv.indexOf('--tor'), 1);
+    parameters.anonimous = true;
+}
+
 if (argv.length == 1) {
     if (argv[0] == 'update') {
         Server.journal.info('Updating AsmX G2...');
@@ -25,7 +32,7 @@ if (argv.length == 1) {
             argv[0] += '.asmx';
         }
 
-        callAsmXG2(argv[0]);
+        callAsmXG2(argv[0], parameters);
     }
 }
 
@@ -47,6 +54,6 @@ function helper() {
 
 }
 
-function callAsmXG2(path) {
-    new Core().run(path);
+function callAsmXG2(path, parameters) {
+    new Core().run(path, parameters);
 }

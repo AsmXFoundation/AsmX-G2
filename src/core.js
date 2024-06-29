@@ -8,7 +8,7 @@ const Server = require('./server/server.js');
 const Router = require('./execution/router.js');
 
 class Core {
-    run(src) {
+    run(src, parameters) {
         let originalSrc = src;
 
         Server.init();
@@ -16,8 +16,8 @@ class Core {
 
         src = process.cwd() + originalSrc;
 
-        Server.journal.info(`Current directory workspace: ${path.dirname(src)}`);
-        Server.journal.info(`File ${src} ${fs.existsSync(src) ? 'exists' : 'does not exist'}`);
+        Server.journal.info(`Current directory workspace: ${parameters?.anonimous ? '*'.repeat(path.dirname(src).length) : path.dirname(src)}`);
+        Server.journal.info(`File ${parameters?.anonimous ? '*'.repeat(src.length) : src} ${fs.existsSync(src) ? 'exists' : 'does not exist'}`);
 
         Router.setIndexFile(src);
         Router.setRouteImportDirectory(path.dirname(src));

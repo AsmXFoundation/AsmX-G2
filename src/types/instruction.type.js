@@ -37,6 +37,7 @@ class TypeOfInstructionExpression {
     static USER =                           this.conv('User');
 
     static MMX_INSTRUCTION =                this.conv('MMXInstruction');
+    static SSE_INSTRUCTION =                this.conv('SSEInstruction');
 
     static classification(instruction) {
         return CustomSwitch.switch(this.USER, {
@@ -48,8 +49,11 @@ class TypeOfInstructionExpression {
             [this.has(instruction.lexem, 'jnz', 'jle', 'jmp')]:                             this.JUMP,
             [this.has(instruction.lexem, 'cmp')]:                                           this.CONDITION_INSTRUCTION,
 
-            [this.has(instruction.lexem, 'store', 'emms')]:                                 this.MMX_INSTRUCTION,
-            
+            [this.has(instruction.lexem, 'store')]:                                         this.MMX_INSTRUCTION,
+            [this.has(instruction.lexem, 'emms', 'emmsr')]:                                 this.MMX_INSTRUCTION,
+
+            [this.has(instruction.lexem, 'storeft')]:                                        this.SSE_INSTRUCTION,
+
             [this.has(instruction.lexem, 'push', 'pop')]:                                   this.STACK,
             [this.has(instruction.lexem, 'export', 'import')]:                              this.MODULE,
             [this.has(instruction.lexem, 'call', 'system')]:                                this.SYSTEM,

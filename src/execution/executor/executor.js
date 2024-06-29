@@ -16,6 +16,7 @@ const Branchmember = require("../members/branch-member.js");
 const JumpMember = require("../members/jump-member.js");
 const ConditionInstructionMember = require("../members/condition-instruction-member.js");
 const MMXInstructionMember = require("../members/mmx-member.js");
+const SSEInstructionMember = require("../members/sse-member.js");
 
 
 class IntermediateRepresentationCompiler {
@@ -70,6 +71,8 @@ class IntermediateRepresentationCompiler {
                     break;
                     case TypeOfInstructionExpression.MMX_INSTRUCTION:
                         MMXInstructionMember.generalImplementation(expression);
+                    case TypeOfInstructionExpression.SSE_INSTRUCTION:
+                        SSEInstructionMember.generalImplementation(expression);
                     break;
                 }
                 

@@ -1,11 +1,9 @@
-const SyntaxScannerExpression = require("../../parsing/scanner-syntax");
 const TypeOfAtomicExpression = require("../../types/expression.type");
 const TypeOfInstructionExpression = require("../../types/instruction.type");
 const Hardware = require("../hardware/hardware");
 const HardwareArgument = require("../hardware/hardware-argument");
-const HardwareException = require("../hardware/hardware-exception");
 
-class MMXInstructionMember {
+class SSEInstructionMember {
     static generalImplementation(expression) {
         const tokenInstruction = expression.body.id;
         let args = expression.body.ast;
@@ -22,7 +20,7 @@ class MMXInstructionMember {
 
         const hardware = new Hardware();
 
-        if (action_t == 'store') {
+        if (action_t == 'storeft') {
             if (expression.body.ast[0].type != TypeOfAtomicExpression.ARGUMENTS) {
                 SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected arguments');
             }
@@ -30,26 +28,13 @@ class MMXInstructionMember {
             if ([args.length > 2, args.length < 2].includes(true)) {
                 HardwareException.except(
                     'takes exactly 2 arguments',
-                    `But ${args.length} were given instead of 2 arguments`,
-                    `Base syntax: store $reg, type[]`
+                    `But ${args.length} were given instead of 2 arguments`
                 );
             }
 
-            hardware.mmx_store(...valueOfArguments);
-        } else if (action_t == 'emms') {
-            if (args.length != 0) {
-                SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected no arguments');
-            }
-
-            hardware.mmx_emms();
-        } else if (action_t == 'emmsr') {
-            if (args.length > 1 || args.length == 0) {
-                SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'takes only 1 argument');
-            }
-
-            hardware.mmx_emmsr(...valueOfArguments);
+            hardware.sse_storeft(...valueOfArguments);
         }
     }
 }
 
-module.exports = MMXInstructionMember;
+module.exports = SSEInstructionMember;
