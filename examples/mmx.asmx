@@ -9,8 +9,12 @@
     @system 4                 ;; output: $mm0 = [120, 120, 120, 120]
 
     @push $mmi0
-    @system 4                 ;; output: 0x00000004
+    @system 4
 
-    @emms
+    @mov $mmi0, 0
+    @mov $ax, 14
+    @load [$ax], $mm0
+    @push [$ax]
+    @system 4
 } 
 

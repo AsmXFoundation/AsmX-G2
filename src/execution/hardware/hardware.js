@@ -464,6 +464,14 @@ class Hardware {
         this.memory.set([value], pointer);
     }
 
+    #memory_super_operation_write_data_by_pointer(pointer, value) {
+        const value_bytes = new Uint16Array(value.buffer);
+
+        for (let index = 0; index < value_bytes.length; index++) {
+            this.#memory_micro_operation_write_byte_by_pointer(pointer + index, value_bytes.at(index));
+        }
+    }
+
     #memory_micro_operation_pull_byte_by_pointer(pointer) {
         return this.memory.at(pointer);
     }
@@ -1105,6 +1113,46 @@ class Hardware {
 
         this.#mmx_register_vec_set(destination.name, source?.ptr?.value, reloaded_index);
         this.set_register_by_name(register_index_name, reloaded_index + 1);
+    }
+
+    mmx_load(destination, source) {
+        if (source?.type != this.#typeid_movement.reg) {
+            HardwareException.except('first argument of store should be $reg');
+        }
+        
+        if (!this.#is_mmx_register_vec(source.name)) {
+            HardwareException.except(
+                'load instruction can be used only with mmx registers',
+                `mmx registers: ${Object.keys(this.mmx_registers_vec).join(', ')}`
+            );
+        }
+
+        const vec_name = source.name;
+        const source_val = this.#handler_explicit_source_get_argument_value(source);
+        const register_index_name = this.#mmx_get_register_reg_name_by_vec_name(vec_name);
+        const index = this.get_register_by_name(register_index_name)[0];
+        const item_vec = source_val[index];
+  
+        if (item_vec == undefined) {
+            HardwareException.except(
+                `Cannot write null value to memory or register.`
+            );
+        }
+
+        if (destination?.type == this.#typeid_movement.reg) {
+            const [item_size, reg_size] = [this.sizeof(item_vec), this.sizeof(destination.name)];
+
+            if (item_size > reg_size) {
+                HardwareException.except(
+                   `Cannot save item to register '${destination.name}'. Item size (${item_size} bytes) exceeds register size (${reg_size} bytes).`
+                );
+            }
+
+            this.set_register_by_name(destination.name, item_vec);
+        } else if (destination?.type == this.#typeid_movement.mem) {
+            const destination_ptr = this.#handler_explicit_destination_get_argument_value(destination);
+            this.#memory_super_operation_write_data_by_pointer(destination_ptr[0], item_vec);
+        }
     }
 
     mmx_emms() {

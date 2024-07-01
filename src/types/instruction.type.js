@@ -49,7 +49,7 @@ class TypeOfInstructionExpression {
             [this.has(instruction.lexem, 'jnz', 'jle', 'jmp')]:                             this.JUMP,
             [this.has(instruction.lexem, 'cmp')]:                                           this.CONDITION_INSTRUCTION,
 
-            [this.has(instruction.lexem, 'store')]:                                         this.MMX_INSTRUCTION,
+            [this.has(instruction.lexem, 'store', 'load')]:                                 this.MMX_INSTRUCTION,
             [this.has(instruction.lexem, 'emms', 'emmsr')]:                                 this.MMX_INSTRUCTION,
 
             [this.has(instruction.lexem, 'storeft')]:                                        this.SSE_INSTRUCTION,

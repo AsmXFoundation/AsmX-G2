@@ -36,6 +36,20 @@ class MMXInstructionMember {
             }
 
             hardware.mmx_store(...valueOfArguments);
+        } else if (action_t == 'load') {
+            if (expression.body.ast[0].type != TypeOfAtomicExpression.ARGUMENTS) {
+                SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected arguments');
+            }
+
+            if ([args.length > 2, args.length < 2].includes(true)) {
+                HardwareException.except(
+                    'takes exactly 2 arguments',
+                    `But ${args.length} were given instead of 2 arguments`,
+                    `Base syntax: store $reg, type[]`
+                );
+            }
+
+            hardware.mmx_load(...valueOfArguments);
         } else if (action_t == 'emms') {
             if (args.length != 0) {
                 SyntaxScannerExpression.exceptDefaultTracewayException(expression.body.id, 'Expected no arguments');
