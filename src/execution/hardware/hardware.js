@@ -1,8 +1,12 @@
 const typeid = require("../types/typeid");
+const HardwareBaseConstructor = require("./hardware-base");
 const HardwareException = require("./hardware-exception");
+const HardwareObserver = require("./hardware-observer");
 
-class Hardware {
+class Hardware extends HardwareBaseConstructor {
     constructor () { 
+        super();
+
         this.startPoint = 0x0000_0000;
         this.maxsize = 0xFFFFFFFF;
         this.size = this.maxsize / 5;
@@ -115,7 +119,7 @@ class Hardware {
             $rsp: new BigUint64Array(1),
         };
 
-        this.registers = {
+        this.immediate_registers = {
             $imm0: new Uint8Array(1),
             $imm1: new Uint8Array(1),
             $imm2: new Uint8Array(1),
@@ -126,7 +130,17 @@ class Hardware {
             $imm7: new Uint8Array(1),
             $imm8: new Uint8Array(1),
             $imm9: new Uint8Array(1),
-            $imm10: new Uint8Array(1),
+            $imm10: new Uint8Array(1)
+        };
+
+        this.flags = {
+            $zf: new Uint8Array(1),
+            $cf: new Uint8Array(1),
+            $of: new Uint8Array(1)
+        };
+
+        this.registers = {
+            ...this.immediate_registers,
 
             ...this.gpr_registers,
 
@@ -135,12 +149,6 @@ class Hardware {
 
             ...this.sse_registers_vec,
             ...this.sse_registers_reg
-        };
-
-        this.flags = {
-            $zf: new Uint8Array(1),
-            $cf: new Uint8Array(1),
-            $of: new Uint8Array(1)
         };
 
         this.NULL_TERMINATOR = 0x00;
@@ -152,6 +160,8 @@ class Hardware {
         }
         
         Hardware.instance = this;
+
+        return new Proxy(this, HardwareObserver.observe);
     }
 
     #typeid_uints = {
@@ -234,18 +244,6 @@ class Hardware {
         HardwareException.except(`Register '${name}' not found`);
     }
 
-    set_register_by_name(name, value) {
-        if (name in this.registers) {
-            if (this.registers[name] instanceof BigUint64Array) {
-                value = BigInt(value);
-            }
-
-            this.registers[name].set([value]);
-        } else {
-            HardwareException.except(`Register '${name}' not found`);
-        }
-    }
-
     #is_mmx_register_vec(name) {
         return (name in this.mmx_registers_vec);
     }
@@ -274,19 +272,19 @@ class Hardware {
         return Math.floor(Math.random() * 65536);
     }
 
-    #math_micro_operation_add(a, b) {
+    math_micro_operation_add(a, b) {
         return a + b;
     }
 
-    #math_micro_operation_sub(a, b) {
+    math_micro_operation_sub(a, b) {
         return a - b;
     }
 
-    #math_micro_operation_mul(a, b) {
+    math_micro_operation_mul(a, b) {
         return a * b;
     }
 
-    #math_micro_operation_div(a, b) {
+    math_micro_operation_div(a, b) {
         return a / b;
     }
     
@@ -314,25 +312,13 @@ class Hardware {
             args.push(result_raw);
         }
 
-        switch (opcode) {
-            case 'add':
-                result_raw = args.reduce(this.#math_micro_operation_add, result_raw);
-                break;
-
-            case 'sub':
-                result_raw = args.reduce(this.#math_micro_operation_sub, result_raw);
-                break;
-
-            case 'mul':
-                result_raw = args.reduce(this.#math_micro_operation_mul, result_raw);
-                break;
-
-            case 'div':
-                result_raw = args.reduce(this.#math_micro_operation_div, result_raw);
-                break;
-
-            default:
-                break;
+        if (this[`math_micro_operation_${opcode}`]) {
+            result_raw = args.reduce(this[`math_micro_operation_${opcode}`], result_raw);
+        } else {
+            HardwareException.except(
+                `Unknown math operation ${opcode}`,
+                `Available math operations: add, sub, mul, div`
+            );
         }
 
         const result_t = this.#fetch_typeid(result_raw);
@@ -439,6 +425,18 @@ class Hardware {
             } else {
                 console.log(bytes.map(b => String.fromCharCode(b)).join(''));
             }
+        }
+    }
+
+    system_call(number) {
+        if (number == 1) {
+            process.exit(0);
+        } else if (number == 3) {
+            this.ostream_stdout(this.ostream_stdout_signals.stream);
+        } else if (number == 4) {
+            this.ostream_stdout();
+        } else {
+            HardwareException.except('Undefined system call');
         }
     }
 

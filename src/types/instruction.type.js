@@ -35,9 +35,10 @@ class TypeOfInstructionExpression {
     static FIELD =                          this.conv('Field');
     static DATA_STRUCTURE =                 this.conv('DataStructure');
     static USER =                           this.conv('User');
-
+ 
     static MMX_INSTRUCTION =                this.conv('MMXInstruction');
     static SSE_INSTRUCTION =                this.conv('SSEInstruction');
+    static GPU_INSTRUCTION =                this.conv('GPUInstruction');
 
     static classification(instruction) {
         return CustomSwitch.switch(this.USER, {
@@ -56,7 +57,7 @@ class TypeOfInstructionExpression {
 
             [this.has(instruction.lexem, 'push', 'pop')]:                                   this.STACK,
             [this.has(instruction.lexem, 'export', 'import')]:                              this.MODULE,
-            [this.has(instruction.lexem, 'call', 'system')]:                                this.SYSTEM,
+            [this.has(instruction.lexem, 'call', 'system', 'mode')]:                        this.SYSTEM,
             [this.has(instruction.lexem, 'return', 'ret')]:                                 this.RETURN,
             [this.has(instruction.lexem, 'set', 'const')]:                                  this.VARIABLE,
             [this.has(instruction.lexem, 'function', 'tion')]:                              this.DECLARATION,

@@ -19,15 +19,23 @@ class SystemMember extends MemberBaseConstructor {
             RuntimeException.exceptDefaultTracewayException(expression.body.id, 'takes only number');
         }
 
-        if (valueOfArgument == 1) {
-            process.exit();
-        } else if (valueOfArgument == 3) {
-            hardware.ostream_stdout(hardware.ostream_stdout_signals.stream);
-        } else if (valueOfArgument == 4) {
-            hardware.ostream_stdout();
-        } else {
-            RuntimeException.exceptDefaultTracewayException(expression.body.id, 'Undefined system call');
+        hardware.system_call(valueOfArgument);
+    }
+
+    static __mode__expr__(expression) {
+        if (expression.body.ast[0].type == TypeOfAtomicExpression.ARGUMENTS) {
+            RuntimeException.exceptDefaultTracewayException(expression.body.id, 'takes only one argument');
         }
+
+        const AtomicIntermediateRepresentationCompiler = require("../executor/executor-atomic.js");
+        const valueOfArgument = AtomicIntermediateRepresentationCompiler.complie(expression.body.ast[0]);
+        const hardware = new Hardware();
+        
+        if (typeof valueOfArgument != 'number') {
+            RuntimeException.exceptDefaultTracewayException(expression.body.id, 'takes only number');
+        }
+
+        hardware.mode(valueOfArgument);
     }
 
     static __call__expr__(expression) {
