@@ -8,7 +8,7 @@ class HardwareController {
         this.isInitialized = false;
 
         this.env = {
-            constants: { drivers: { gpu: false } },
+            constants: { drivers: { gpu: false, rtc: false } },
             XDG_DRIVER_HOME: null,
             PATH_DRIVERS: {},
         };
